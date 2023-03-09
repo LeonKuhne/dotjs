@@ -36,23 +36,31 @@
       const engine = new Engine(canvas)
       window.dot = engine
 
-      // add particles while mouse is down
+      // add particles
       let mouseDown = false
       let [lastX, lastY] = [0, 0]
       let minDelta = 5
+      const addParticles = (clickX, clickY) => {
+        if (!mouseDown 
+          || Math.abs(clickX - lastX) < minDelta 
+          || Math.abs(clickY - lastY) < minDelta
+        ) return
+        [lastX, lastY] = [clickX, clickY]
+        const rect = canvas.getBoundingClientRect()
+        const x = (clickX - rect.left) / document.body.clientWidth
+        const y = (clickY - rect.top) / document.body.clientHeight
+        engine.add([Math.random(),Math.random(), Math.random()], [x, y])
+      }
+      // listeners
       document.addEventListener('mousedown', e => mouseDown = true)
       document.addEventListener('mouseup', e => mouseDown = false)
-      document.addEventListener('mousemove', e => {
-        if (!mouseDown 
-          || Math.abs(e.clientX - lastX) < minDelta 
-          || Math.abs(e.clientY - lastY) < minDelta
-        ) return
-        [lastX, lastY] = [e.clientX, e.clientY]
-        const rect = canvas.getBoundingClientRect()
-        const x = (e.clientX - rect.left) / document.body.clientWidth
-        const y = (e.clientY - rect.top) / document.body.clientHeight
-        engine.add([Math.random(),Math.random(), Math.random()], [x, y])
-      })
+      document.addEventListener('mousemove', e => 
+        addParticles(e.clientX, e.clientY))
+      // mobile listeners
+      document.addEventListener('touchstart', e => mouseDown = true)
+      document.addEventListener('touchend', e => mouseDown = false)
+      document.addEventListener('touchmove', e => 
+        addParticles(e.touches[0].clientX, e.touches[0].clientY))
 
       // fix canvas on resize
       window.addEventListener('resize', e => {
