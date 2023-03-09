@@ -54,6 +54,12 @@
         engine.add([Math.random(),Math.random(), Math.random()], [x, y])
       })
 
+      // fix canvas on resize
+      window.addEventListener('resize', e => {
+        canvas.width = document.body.clientWidth
+        canvas.height = document.body.clientHeight
+      })
+
       // controls
       document.addEventListener('keydown', e => {
         // press space to pause
