@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>dotjs</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="dotjs library example">
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: black;
+      margin: 0;
+      color: white;
+    } .info {
+      position: absolute;
+      z-index: 1;
+      background: black;
+      opacity: 0.15;
+      font-family: monospace;
+      padding: 1rem;
+      cursor: default;
+    } .info:hover {
+      opacity: 0.7;
+    } canvas {
+      width: 100%;
+      height: 100%;
+      background: #333;
+      position: absolute;
+    }
+  </style>
+  <script type="module">
+    import { Engine } from './src/engine.js'
+    window.onload = () => {
+      const canvas = document.getElementById('canvas')
+      const engine = new Engine(canvas)
+      window.dot = engine
+
+      // add particles while mouse is down
+      let mouseDown = false
+      let [lastX, lastY] = [0, 0]
+      let minDelta = 5
+      document.addEventListener('mousedown', e => mouseDown = true)
+      document.addEventListener('mouseup', e => mouseDown = false)
+      document.addEventListener('mousemove', e => {
+        if (!mouseDown 
+          || Math.abs(e.clientX - lastX) < minDelta 
+          || Math.abs(e.clientY - lastY) < minDelta
+        ) return
+        [lastX, lastY] = [e.clientX, e.clientY]
+        const rect = canvas.getBoundingClientRect()
+        const x = (e.clientX - rect.left) / document.body.clientWidth
+        const y = (e.clientY - rect.top) / document.body.clientHeight
+        engine.add([Math.random(),Math.random(), Math.random()], [x, y])
+      })
+
+      // controls
+      document.addEventListener('keydown', e => {
+        // press space to pause
+        if (e.code === 'Space') engine.toggle()
+        // press r to reset
+        if (e.key === 'r') engine.reset()
+      })
+
+      // start
+      engine.run()
+    }
+  </script>
+</head>
+<body>
+  <div class="info">
+    <h1>d○t js</h1>
+    <p>click to add particles</p>
+    <p>press space to pause</p>
+    <p>press r to reset</p>
+  </div>
+  <canvas id="canvas"></canvas>
+</body>
+</html>
