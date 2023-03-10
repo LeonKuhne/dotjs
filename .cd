@@ -7,3 +7,6 @@ function serve() {
   python -m http.server 8000
 }
 
+function build() {
+  rollup src/engine.js --file bundle.js --format iife --name "dotjs"
+}
