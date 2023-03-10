@@ -11,11 +11,11 @@ export class Engine {
     this.canvas = canvas
     this.batchSize = 0
     this.spaceDepth = 0 // simulate this many mirrored neighboring spaces
-    this.speed = 0.001
+    this.speed = 0.005
     this.wrap = false
     this.centerGravity = 0.00000000000000001
-    this.gravityCurve = 0.05
-    this.antigravity = 0.3
+    this.gravityCurve = 0.03
+    this.antigravity = 0.05
     this.center = new Particle(0, [0.5, 0.5])
     this.color = (particle) => particle.spin
       .map((spin) => Math.floor(spin * 255))
@@ -61,11 +61,15 @@ export class Engine {
         new Vector(this.particles[i], this.particles[j])
           .attract(this.spaceDepth)
           .gravitate(this.antigravity)
+          // repel from walls
+          .antiwall()
           .delta,
         // attract to center
+        /*
         new Vector(this.particles[i], this.center)
           .gravitate(-this.centerGravity, this.gravityCurve)
           .delta,
+        */
       ])
   }
 

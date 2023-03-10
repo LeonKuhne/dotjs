@@ -1,10 +1,11 @@
 import { Position } from "./position.js"
 
 export class Vector {
-  constructor(start, end, maxDelta=0.1) {
+  constructor(start, end) {
     this.start = start
     this.end = end
     this.delta = new Position([0, 0])
+    this.wallForce = 0.0001
   }
 
   add(distance, direction) {
@@ -43,6 +44,18 @@ export class Vector {
         this.add(delta, direction)
       }
     }
+    return this
+  }
+
+  antiwall() {
+    // get distance from walls
+    const left = this.start.x 
+    const top = this.start.y
+    // add force to move away from walls
+    if (left < .5) this.add(left * this.wallForce, 0)
+    else this.add((1 - left) * this.wallForce, Math.PI)
+    if (top < .5) this.add(top * this.wallForce, Math.PI / 2)
+    else this.add((1 - top) * this.wallForce, Math.PI * 3 / 2)  
     return this
   }
 }

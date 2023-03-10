@@ -34,7 +34,9 @@
     } .color {
       width: 1rem;
       height: 1rem;
-    } 
+    } .controls input {
+      display: block;
+    }
   </style>
   <script type="module">
     import { Engine } from './src/engine.js'
@@ -84,7 +86,6 @@
         if (e.key === 'r') engine.reset()
       })
 
-
       // create color options elements
       const colorPalette = document.querySelector('.color-palette')
       for (let i = 0; i < 10; i++) {
@@ -102,6 +103,23 @@
         })
         colorPalette.appendChild(color)
       }
+
+      // update speed
+      const speedSlider = document.querySelector('.setSpeed')
+      if (speedSlider) {
+        speedSlider.addEventListener('input', 
+          e => engine.speed = e.target.value)
+        speedSlider.dispatchEvent(new Event('input'))
+      }
+
+      // update spread
+      const spreadSlider = document.querySelector('.setSpread')
+      if (spreadSlider) {
+        spreadSlider.addEventListener('input', 
+          e => engine.antigravity = e.target.value)
+        spreadSlider.dispatchEvent(new Event('input'))
+      }
+
       // start
       engine.run()
     }
@@ -114,6 +132,12 @@
     <p>press space to pause</p>
     <p>press r to reset</p>
     <div class="color-palette"></div>
+    <div class="controls">
+      <input class="setSpeed" type="range" title="speed"
+        min="0" max="0.01" step="0.00001" />
+      <input class="setSpread" type="range" title="spread"
+        min="0" max="1" step="0.00001" />
+    </div>
   </div>
   <canvas id="canvas"></canvas>
 </body>
