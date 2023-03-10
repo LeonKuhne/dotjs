@@ -8,5 +8,5 @@ function serve() {
 }
 
 function build() {
-  rollup src/engine.js --file bundle.js --format iife --name "dotjs"
+  rollup src/engine.js --file dot.js --format iife --name "dotjs"
 }
