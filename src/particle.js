@@ -9,7 +9,7 @@ export class Particle extends Position {
   ) {
     super(pos)
     this.spin = spin
-    this.size = 5
+    this.size = 8
   }
 
   draw(ctx, w, h, color=(_) => [150,150,150]) {
