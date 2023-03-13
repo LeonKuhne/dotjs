@@ -99,7 +99,8 @@
           const color = document.createElement('div')
           color.classList.add('color')
           color.style.background = `hsl(${i * 360/numColors}, 100%, ${b * 100/numBrightness}%)`
-          color.addEventListener('click', e => {
+          const setColor = (e) => {
+            e.preventDefault()
             // parse background style to rgb array
             const rgb = e.target.style.background
               .replace('rgb(', '')
@@ -107,7 +108,9 @@
               .split(',')
               .map(c => parseInt(c) / 255)
             paintSpin = () => rgb
-          })
+          }
+          color.addEventListener('mousedown', setColor)
+          color.addEventListener('click', setColor)
           colorPalette.appendChild(color)
         }
       }
