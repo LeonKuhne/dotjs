@@ -36,7 +36,7 @@ export class Position {
   }
 
   copy() {
-    return new Position(this.pos)
+    return new Position([...this.pos])
   }
 
   get x() { return this.pos[0] }

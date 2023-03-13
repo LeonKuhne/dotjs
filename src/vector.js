@@ -34,9 +34,11 @@ export class Vector {
 
   attract(spaces=0) {
     // attract to surrounding spaces
-    for (let x = -spaces; x <= spaces; x++) {
-      for (let y = -spaces; y <= spaces; y++) {
-        const space = this.end.copy().slide(new Position([x, y]))
+    console.log("spaces")
+    for (let x = -spaces; x < spaces+1; x++) {
+      for (let y = -spaces; y < spaces+1; y++) {
+        const space = this.end.copy()
+        space.slide(new Position([x, y]))
         const distance = this.start.distance(space)
         const direction = this.start.direction(space)
         const repulsionForce = 1 - this.start.spinDelta(space) * 2
@@ -44,6 +46,7 @@ export class Vector {
         this.add(delta, direction)
       }
     }
+    console.log("end spaces")
     return this
   }
 

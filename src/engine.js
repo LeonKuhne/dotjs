@@ -10,9 +10,9 @@ export class Engine {
     this.tickDelay = 1000 / tps
     this.canvas = canvas
     this.batchSize = 0
-    this.spaceDepth = 0 // simulate this many mirrored neighboring spaces
+    this.spaceDepth = 1 // simulate this many mirrored neighboring spaces
     this.speed = 0.005
-    this.wrap = false
+    this.wrap = true
     this.centerGravity = 0.00000000000000001
     this.gravityCurve = 0.03
     this.antigravity = 0.05
@@ -62,7 +62,7 @@ export class Engine {
           .attract(this.spaceDepth)
           .gravitate(this.antigravity)
           // repel from walls
-          .antiwall()
+          //.antiwall()
           .delta,
         // attract to center
         /*

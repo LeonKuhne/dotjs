@@ -40,7 +40,8 @@ export class Particle extends Position {
 
   wrap(range=1) {
     for (let i = 0; i < this.pos.length; i++) {
-      if (this.pos[i] < 0) { this.pos[i] += range }
+      if (this.pos[i] < 0) { 
+        this.pos[i] += range }
       else { this.pos[i] %= range }
     }
   }
@@ -53,6 +54,6 @@ export class Particle extends Position {
   }
 
   copy() {
-    return new Particle(this.spin, this.pos)
+    return new Particle([...this.spin], [...this.pos])
   }
 }
