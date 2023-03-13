@@ -5,7 +5,7 @@ export class Vector {
     this.start = start
     this.end = end
     this.delta = new Position([0, 0])
-    this.wallForce = 0.0001
+    this.wallForce = 0.01
   }
 
   add(distance, direction) {
@@ -16,37 +16,33 @@ export class Vector {
     return this
   }
 
-  gravitate(strength, curve=1) {
-    const direction = this.start.direction(this.end)
-    let distance = this.start.distance(this.end)
-    // reverse distance if strength is negative
-    let negate = strength < 0
-    if (negate) strength = -strength
-    let gravity = Math.pow((strength / distance), curve)
-    //const gravity = strength * (1 - Math.pow(distance, 2))
-    //const gravity = strength / Math.tan(distance - Math.PI / 2 - .5)
-    //const gravity = strength * (1 - Math.pow(distance, radius))
-    // check if gravity is nan
-    if (negate) gravity = -gravity
-    this.add(-gravity, direction)
+  gravitate(spaces=0, strength=0.05, curve=1) {
+    this.forSpaces(spaces, space => {
+      const direction = this.start.direction(space)
+      let distance = this.start.distance(space)
+      // reverse distance if strength is negative
+      let negate = strength < 0
+      if (negate) strength = -strength
+      let gravity = Math.pow((strength / distance), curve)
+      //const gravity = strength * (1 - Math.pow(distance, 2))
+      //const gravity = strength / Math.tan(distance - Math.PI / 2 - .5)
+      //const gravity = strength * (1 - Math.pow(distance, radius))
+      // check if gravity is nan
+      if (negate) gravity = -gravity
+      this.add(-gravity, direction)
+    })
     return this
   }
 
   attract(spaces=0) {
     // attract to surrounding spaces
-    console.log("spaces")
-    for (let x = -spaces; x < spaces+1; x++) {
-      for (let y = -spaces; y < spaces+1; y++) {
-        const space = this.end.copy()
-        space.slide(new Position([x, y]))
-        const distance = this.start.distance(space)
-        const direction = this.start.direction(space)
-        const repulsionForce = 1 - this.start.spinDelta(space) * 2
-        const delta = (1 - distance) ** 2 * repulsionForce
-        this.add(delta, direction)
-      }
-    }
-    console.log("end spaces")
+    this.forSpaces(spaces, space => {
+      const distance = this.start.distance(space)
+      const direction = this.start.direction(space)
+      const repulsionForce = 1 - this.start.spinDelta(space) * 2
+      const delta = (1 - distance) ** 2 * repulsionForce
+      this.add(delta, direction)
+    })
     return this
   }
 
@@ -59,6 +55,15 @@ export class Vector {
     else this.add((1 - left) * this.wallForce, Math.PI)
     if (top < .5) this.add(top * this.wallForce, Math.PI / 2)
     else this.add((1 - top) * this.wallForce, Math.PI * 3 / 2)  
+    return this
+  }
+
+  forSpaces(spaces, callback) {
+    for (let x = -spaces; x < spaces+1; x++) {
+      for (let y = -spaces; y < spaces+1; y++) {
+        callback(this.end.copy().slide(new Position([x, y])))
+      }
+    }
     return this
   }
 }

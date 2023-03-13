@@ -60,7 +60,7 @@ export class Engine {
         // attract to other particles
         new Vector(this.particles[i], this.particles[j])
           .attract(this.spaceDepth)
-          .gravitate(this.antigravity)
+          .gravitate(this.spaceDepth, this.antigravity)
           // repel from walls
           //.antiwall()
           .delta,
@@ -78,7 +78,7 @@ export class Engine {
     const rand = () => Math.floor(Math.random() * this.particles.length)
     for (let batch = 0; batch < size; batch++) {
       let [i, j] = [rand(), rand()]
-      if (i == j) { continue }
+      //if (i == j) { continue }
       if (deltas[i] == null) { deltas[i] = new Position([0, 0]) }
       if (deltas[j] == null) { deltas[j] = new Position([0, 0]) }
       deltas[i] = this.applyForces(deltas[i], i, j)

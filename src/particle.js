@@ -23,8 +23,8 @@ export class Particle extends Position {
   // compute delta of spin between two spin values
   static spinAttraction(a, b, fill=0.5) {
     if (isNaN(a) || isNaN(b)) { return fill }
-    //return b - a
-    return a > b ? Math.pow((a-b), 2) : Math.pow((b-a), 2)
+    return Math.abs(b - a)
+    //return a > b ? Math.pow((a-b), 2) : Math.pow((b-a), 2)
     //return ((this.spin[i] - other.spin[i]) / 2) ** 2
     //return (Math.abs(this.spin[i] - other.spin[i]) / 2
   }
