@@ -32,8 +32,8 @@
       flex-wrap: wrap;
       width: 10rem;
     } .color {
-      width: 1rem;
-      height: 1rem;
+      width: .5rem;
+      height: .5rem;
     } .controls input {
       display: block;
     }
@@ -93,11 +93,12 @@
 
       // create color options elements
       const colorPalette = document.querySelector('.color-palette')
-      for (let i = 0; i < 10; i++) { // hue
-        for (let b = 0; b < 10; b++) { // brightness
+      const [numColors, numBrightness] = [20, 20]
+      for (let i = 0; i < numColors; i++) { // hue
+        for (let b = 0; b < numBrightness; b++) { // brightness
           const color = document.createElement('div')
           color.classList.add('color')
-          color.style.background = `hsl(${i * 36}, 100%, ${b * 10}%)`
+          color.style.background = `hsl(${i * 360/numColors}, 100%, ${b * 100/numBrightness}%)`
           color.addEventListener('click', e => {
             // parse background style to rgb array
             const rgb = e.target.style.background
