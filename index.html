@@ -93,20 +93,22 @@
 
       // create color options elements
       const colorPalette = document.querySelector('.color-palette')
-      for (let i = 0; i < 10; i++) {
-        const color = document.createElement('div')
-        color.classList.add('color')
-        color.style.background = `hsl(${i * 36}, 100%, 50%)`
-        color.addEventListener('click', e => {
-          // parse background style to rgb array
-          const rgb = e.target.style.background
-            .replace('rgb(', '')
-            .replace(')', '')
-            .split(',')
-            .map(c => parseInt(c) / 255)
-          paintSpin = () => rgb
-        })
-        colorPalette.appendChild(color)
+      for (let i = 0; i < 10; i++) { // hue
+        for (let b = 0; b < 10; b++) { // brightness
+          const color = document.createElement('div')
+          color.classList.add('color')
+          color.style.background = `hsl(${i * 36}, 100%, ${b * 10}%)`
+          color.addEventListener('click', e => {
+            // parse background style to rgb array
+            const rgb = e.target.style.background
+              .replace('rgb(', '')
+              .replace(')', '')
+              .split(',')
+              .map(c => parseInt(c) / 255)
+            paintSpin = () => rgb
+          })
+          colorPalette.appendChild(color)
+        }
       }
 
       // update speed
