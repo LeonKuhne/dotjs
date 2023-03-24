@@ -4,7 +4,7 @@ title "javascript particle library"
 help .cd | indent
 
 function serve() {
-  python -m http.server 8000
+  python3 -m http.server 8000
 }
 
 function build() {
