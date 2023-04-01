@@ -6,7 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="dotjs library example">
   <style>
-    html, body {
+    :root {
+      --menu-width: 15rem;
+    } html, body {
       width: 100%;
       height: 100%;
       background: black;
@@ -23,19 +25,62 @@
       background: black;
       opacity: 0.15;
       font-family: monospace;
-      padding: 1rem;
       cursor: default;
+      padding-bottom: 1rem;
+      animation: fadeout 1s;
     } .info:hover {
-      opacity: 0.7;
+      animation: fadein 1s;
+      opacity: 0.75;
+    } .info > * {
+      margin-left: 1rem;
+      margin-right: 1rem;
     } .color-palette {
       display: flex;
       flex-wrap: wrap;
-      width: 10rem;
+      width: var(--menu-width);
     } .color {
-      width: .5rem;
-      height: .5rem;
+      width: calc(var(--menu-width) / 20);
+      height: calc(var(--menu-width) / 20);
     } .controls input {
       display: block;
+    } .code {
+      font-family: monospace;
+      font-size: .75rem;
+      line-height: 1rem;
+      background: rgba(0,0,0,0);
+      color: white;
+      resize: none;
+      overflow-y: hidden;
+      width: var(--menu-width);
+      border: none;
+      border-left: 3px solid black;
+      margin-left: -1rem;
+      padding-left: 1rem;
+      font-weight: bold;
+    } .code:focus {
+      outline: none;
+    } .distanceCodePreset {
+      display: block; 
+    } .menuContainer {
+      background-color: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      margin-left: 0;
+    } .menuTitle {
+      height: 0;
+      width: var(--menu-width);
+      font-size: 3rem;
+      text-align: bottom;
+    } .menuTitle div {
+      z-index: -1;
+      position: relative;
+      overflow: hidden;
+      color:rgba(255, 255, 255, 0.1);
+    } @keyframes fadein {
+      from { opacity: 0.15; }
+      to   { opacity: 0.75; } 
+    } @keyframes fadeout {
+      from { opacity: 0.75; }
+      to   { opacity: 0.15; } 
     }
   </style>
   <script type="module">
@@ -131,6 +176,79 @@
         spreadSlider.dispatchEvent(new Event('input'))
       }
 
+      // set distance function
+      const distanceCode = document.querySelector('.distanceCode')
+      const distanceCodeError = document.querySelector('.distanceCodeError')
+      const distanceCodePresets = {
+        "manhatten": `\
+          return Math.abs(a.x - b.x)
+            + Math.abs(a.y - b.y)`,
+        "euclidean": engine.distanceFunc.toString()
+          .replace(/.*\{/, '') // remove everything before the first {
+          .replace(/\}.*$/, '') // remove everything after the last }
+          .split('\n').map(l => l.replace(/^    /, '')).join('\n') // remove first four spaces of each line
+          .split('\n').filter(l => l.trim() !== '').join('\n'), // remove empty lines (including ones with just spaces)
+        "biquadratic": `\
+          return Math.pow(a.x - b.x, 2)
+            + Math.pow(a.y - b.y, 2)`,
+        "minkowski": `\
+          return Math.pow(
+            Math.pow(Math.abs(a.x - b.x), 3)
+              + Math.pow(Math.abs(a.y - b.y), 3),
+            1/3
+          )`,
+        "chebyshev": `\
+          return Math.max(
+            Math.abs(a.x - b.x),
+            Math.abs(a.y - b.y)
+          )`,
+        "wave": `\
+          return Math.abs(
+            Math.sin(a.x - b.x)
+              + Math.sin(a.y - b.y)
+          )`,
+      }
+      const selectedPreset = document.querySelector('.distanceCodePreset')
+      // add presets
+      for (let preset in distanceCodePresets) {
+        const option = document.createElement('option')
+        option.value = preset
+        option.innerText = preset
+        selectedPreset.appendChild(option)
+      }
+      // update code on preset
+      selectedPreset.addEventListener('change', e => {
+        // make code presentable
+        let code = distanceCodePresets[e.target.value]
+        const indent = code.match(/^ */)[0]
+        code = code.split('\n').map(l => l.replace(indent, '')).join('\n')
+        distanceCode.value = code
+        distanceCode.dispatchEvent(new Event('input'))
+      })
+      selectedPreset.dispatchEvent(new Event('change'))
+      distanceCode.value = localStorage.getItem('distanceCode') || distanceCodePresets[selectedPreset.value] 
+        //"chebyshev": `\
+
+      if (distanceCode) {
+        distanceCode.addEventListener('input', e => {
+          // update code
+          try {
+            engine.distanceFunc = new Function('a', 'b', e.target.value)
+            distanceCode.style.borderColor = 'green'
+            distanceCodeError.innerText = ''
+          } catch (err) {
+            distanceCode.style.borderColor = 'red'
+            distanceCodeError.innerText = err.message
+          }
+          // cache code
+          localStorage.setItem('distanceCode', e.target.value)
+          // update height
+          const numLines = e.target.value.split('\n').length
+          e.target.style.height = `${numLines}rem`
+        })
+        distanceCode.dispatchEvent(new Event('input'))
+      }
+
       // start
       engine.run()
     }
@@ -143,11 +261,18 @@
     <p>press space to pause</p>
     <p>press r to reset</p>
     <div class="color-palette"></div>
-    <div class="controls">
+    <div class="controls menuContainer">
+      <div class="menuTitle"><div>controls</div></div>
       <input class="setSpeed" type="range" title="speed"
         min="0" max="0.1" step="0.00001" />
       <input class="setSpread" type="range" title="spread"
         min="0.01" max="0.1" step="0.001" />
+    </div>
+    <div class="menuContainer">
+      <div class="menuTitle"><div>distance</div></div>
+      <select class="distanceCodePreset"></select>
+      <textarea class="distanceCode code" title="distance function"></textarea>
+      <div class="distanceCodeError code"></div>
     </div>
   </div>
   <canvas id="canvas"></canvas>

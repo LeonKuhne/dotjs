@@ -21,6 +21,7 @@ export class Engine {
       .map((spin) => Math.floor(spin * 255))
       .fill(0, 3) // fill with black
     this.paused = true
+    this.distanceFunc = Vector.euclideanDistance
   }
 
   add(spin, position=[Math.random(), Math.random()]) {
@@ -59,6 +60,7 @@ export class Engine {
       .slideMany([
         // attract to other particles
         new Vector(this.particles[i], this.particles[j])
+          .usingDistance(this.distanceFunc)
           .attract(this.spaceDepth)
           .gravitate(this.spaceDepth, this.antigravity)
           // repel from walls
