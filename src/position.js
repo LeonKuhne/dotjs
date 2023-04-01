@@ -3,13 +3,6 @@ export class Position {
     this.pos = pos;
   }
 
-  // euclidean distance
-  distance(other) {
-    return Math.sqrt(
-      Math.pow((other.x - this.x), 2) +
-      Math.pow((other.y - this.y), 2))
-  }
-
   direction(other) {
     return Math.atan2(other.y - this.y, other.x - this.x)
   }

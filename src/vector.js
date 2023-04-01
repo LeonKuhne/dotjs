@@ -6,6 +6,18 @@ export class Vector {
     this.end = end
     this.delta = new Position([0, 0])
     this.wallForce = 0.01
+    this.distanceFunc = this.euclideanDistance
+  }
+
+  static euclideanDistance(a, b) {
+    return Math.sqrt(
+      (a.x - b.x) ** 2 +
+      (a.y - b.y) ** 2)
+  }
+
+  usingDistance(distanceFunc) {
+    this.distanceFunc = distanceFunc
+    return this 
   }
 
   add(distance, direction) {
@@ -18,8 +30,8 @@ export class Vector {
 
   gravitate(spaces=0, strength=0.05, curve=1) {
     this.forSpaces(spaces, space => {
+      const distance = this.distanceFunc(this.start, space)
       const direction = this.start.direction(space)
-      let distance = this.start.distance(space)
       // reverse distance if strength is negative
       let negate = strength < 0
       if (negate) strength = -strength
@@ -37,7 +49,7 @@ export class Vector {
   attract(spaces=0) {
     // attract to surrounding spaces
     this.forSpaces(spaces, space => {
-      const distance = this.start.distance(space)
+      const distance = this.distanceFunc(this.start, space)
       const direction = this.start.direction(space)
       const repulsionForce = 1 - this.start.spinDelta(space) * 2
       const delta = (1 - distance) ** 2 * repulsionForce
