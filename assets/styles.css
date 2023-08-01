@@ -1,0 +1,84 @@
+:root {
+  --menu-width: 15rem;
+} html, body {
+  width: 100%;
+  height: 100%;
+  background: black;
+  margin: 0;
+  color: white;
+} canvas {
+  width: 100%;
+  height: 100%;
+  background: #333;
+} .views {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+} .mainView, .dummyView {
+  width: 100%;
+  height: 100%;
+} .info {
+  position: absolute;
+  z-index: 1;
+  background: black;
+  opacity: 0.15;
+  font-family: monospace;
+  cursor: default;
+  padding-bottom: 1rem;
+  animation: fadeout 1s;
+} .info:hover {
+  animation: fadein 1s;
+  opacity: 0.75;
+} .info > * {
+  margin-left: 1rem;
+  margin-right: 1rem;
+} .color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  width: var(--menu-width);
+} .color {
+  width: calc(var(--menu-width) / 20);
+  height: calc(var(--menu-width) / 20);
+} .controls input {
+  display: block;
+} .code {
+  font-family: monospace;
+  font-size: .75rem;
+  line-height: 1rem;
+  background: rgba(0,0,0,0);
+  color: white;
+  resize: none;
+  overflow-y: hidden;
+  width: var(--menu-width);
+  border: none;
+  border-left: 3px solid black;
+  margin-left: -1rem;
+  padding-left: 1rem;
+  font-weight: bold;
+} .code:focus {
+  outline: none;
+} .distanceCodePreset {
+  display: block; 
+} .menuContainer {
+  background-color: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-left: 0;
+} .menuTitle {
+  height: 0;
+  width: var(--menu-width);
+  font-size: 3rem;
+  text-align: bottom;
+} .menuTitle div {
+  z-index: -1;
+  position: relative;
+  overflow: hidden;
+  color:rgba(255, 255, 255, 0.1);
+} @keyframes fadein {
+  from { opacity: 0.15; }
+  to   { opacity: 0.75; } 
+} @keyframes fadeout {
+  from { opacity: 0.75; }
+  to   { opacity: 0.15; } 
+}

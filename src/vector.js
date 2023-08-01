@@ -28,9 +28,10 @@ export class Vector {
     return this
   }
 
-  gravitate(spaces=0, strength=0.05, curve=1) {
-    this.forSpaces(spaces, space => {
+  gravitate(strength=0.05, curve=1, minDistance=0.2) {
+    this.forSpaces(1, space => {
       const distance = this.distanceFunc(this.start, space)
+      if (distance > minDistance) { return }
       const direction = this.start.direction(space)
       // reverse distance if strength is negative
       let negate = strength < 0
@@ -42,18 +43,6 @@ export class Vector {
       // check if gravity is nan
       if (negate) gravity = -gravity
       this.add(-gravity, direction)
-    })
-    return this
-  }
-
-  attract(spaces=0) {
-    // attract to surrounding spaces
-    this.forSpaces(spaces, space => {
-      const distance = this.distanceFunc(this.start, space)
-      const direction = this.start.direction(space)
-      const repulsionForce = 1 - this.start.spinDelta(space) * 2
-      const delta = (1 - distance) ** 2 * repulsionForce
-      this.add(delta, direction)
     })
     return this
   }

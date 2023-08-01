@@ -14,10 +14,7 @@ export class Particle extends Position {
 
   draw(ctx, w, h, color=(_) => [150,150,150]) {
     ctx.fillStyle = `rgb(${color(this).join(',')})`
-    ctx.fillRect(
-      this.x * (w - this.size),
-      this.y * (h - this.size),
-      this.size, this.size)
+    ctx.fillRect(this.x * w, this.y * h, this.size, this.size)
   }
 
   // compute delta of spin between two spin values
@@ -40,7 +37,7 @@ export class Particle extends Position {
 
   wrap(range=1) {
     for (let i = 0; i < this.pos.length; i++) {
-      if (this.pos[i] < 0) { 
+      if (this.pos[i] <= 0) { 
         this.pos[i] += range }
       else { this.pos[i] %= range }
     }
