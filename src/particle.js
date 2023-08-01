@@ -15,6 +15,12 @@ export class Particle extends Position {
   draw(ctx, w, h, color=(_) => [150,150,150]) {
     ctx.fillStyle = `rgb(${color(this).join(',')})`
     ctx.fillRect(this.x * w, this.y * h, this.size, this.size)
+    if (this.y + this.size / h > 1) { // draw on top if near bottom
+      ctx.fillRect(this.x * w, (this.y - 1) * h, this.size, this.size)
+    }
+    if (this.x + this.size / w > 1) { // draw on left if near right
+      ctx.fillRect((this.x - 1) * w, this.y * h, this.size, this.size)
+    }
   }
 
   // compute delta of spin between two spin values

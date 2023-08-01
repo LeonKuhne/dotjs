@@ -15,6 +15,7 @@ export class Engine {
     this.centerGravity = 0
     this.gravityCurve = 0.03
     this.antigravity = 0.05
+    this.minInteractDistance = 1
     this.center = new Particle(0, [0.5, 0.5])
     this.color = (particle) => particle.spin
       .map((spin) => Math.floor(spin * 255))
@@ -61,7 +62,7 @@ export class Engine {
         new Vector(this.particles[i], this.particles[j])
           .usingDistance(this.distanceFunc)
           // react to other particles
-          .gravitate(this.antigravity)
+          .gravitate(this.antigravity, this.minInteractDistance)
           // repel from walls
           //.antiwall()
           .delta,

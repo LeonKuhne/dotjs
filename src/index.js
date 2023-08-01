@@ -119,6 +119,15 @@ window.onload = () => {
     spreadSlider.dispatchEvent(new Event('input'))
   }
 
+  // update min interaction distance
+  const minInteractionDistanceSlider = document.querySelector('.setMinInteractDistance')
+  if (minInteractionDistanceSlider) {
+    minInteractionDistanceSlider.addEventListener('input', 
+      e => engine.minInteractDistance = e.target.value)
+    minInteractionDistanceSlider.dispatchEvent(new Event('input'))
+  }
+
+
   // set distance function
   const distanceCode = document.querySelector('.distanceCode')
   const distanceCodeError = document.querySelector('.distanceCodeError')

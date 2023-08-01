@@ -28,7 +28,7 @@ export class Vector {
     return this
   }
 
-  gravitate(strength=0.05, curve=1, minDistance=0.5) {
+  gravitate(strength=0.05, minDistance=1, curve=1) {
     this.forSpaces(1, space => {
       const distance = this.distanceFunc(this.start, space)
       if (distance > minDistance) { return }
