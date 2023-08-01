@@ -10,25 +10,30 @@
 </head>
 <body>
   <div class="info">
-    <h1>dot.js</h1>
-    <p>click to add particles</p>
-    <p>press space to pause</p>
-    <p>press r to reset</p>
-    <div class="color-palette"></div>
-    <div class="controls menuContainer">
-      <div class="menuTitle"><div>controls</div></div>
-      <input class="setSpeed" type="range" title="speed"
-        min="0" max="0.1" step="0.00001" />
-      <input class="setSpread" type="range" title="spread"
-        min="0.01" max="0.1" step="0.001" />
-      <input class="setMinInteractDistance" type="range" title="min interact distance"
-        min="0.01" max="1.0" step="0.001" />
+    <div class="head">
+      <a class="toggleMenu"><h1>></h1></a>
+      <h1 class="head-text">dot.js</h1>
     </div>
-    <div class="menuContainer">
-      <div class="menuTitle"><div>distance</div></div>
-      <select class="distanceCodePreset"></select>
-      <textarea class="distanceCode code" title="distance function"></textarea>
-      <div class="distanceCodeError code"></div>
+    <div class="menu">
+      <p>click to add particles</p>
+      <p>press space to pause</p>
+      <p>press r to reset</p>
+      <div class="color-palette"></div>
+      <div class="controls menuContainer">
+        <div class="menuTitle"><div>controls</div></div>
+        <input class="setSpeed" type="range" title="speed"
+          min="0" max="0.1" step="0.00001" />
+        <input class="setSpread" type="range" title="spread"
+          min="0.01" max="0.1" step="0.001" />
+        <input class="setMinInteractDistance" type="range" title="min interact distance"
+          min="0.01" max="1.0" step="0.001" />
+      </div>
+      <div class="menuContainer">
+        <div class="menuTitle"><div>distance</div></div>
+        <select class="distanceCodePreset"></select>
+        <textarea class="distanceCode code" title="distance function"></textarea>
+        <div class="distanceCodeError code"></div>
+      </div>
     </div>
   </div>
   <canvas id="canvas"></canvas>
