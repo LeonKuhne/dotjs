@@ -23,22 +23,17 @@ export class Particle extends Position {
     }
   }
 
-  // compute delta of spin between two spin values
-  static spinAttraction(a, b, fill=0.5) {
-    if (isNaN(a) || isNaN(b)) { return fill }
-    return Math.abs(b - a)
-    //return a > b ? Math.pow((a-b), 2) : Math.pow((b-a), 2)
-    //return ((this.spin[i] - other.spin[i]) / 2) ** 2
-    //return (Math.abs(this.spin[i] - other.spin[i]) / 2
+  spinDelta(other) { 
+    return Particle.SpinDelta(this, other)
   }
 
-  // aka. repulsion/attraction force (-1, 1)
-  spinDelta(other) { 
+  // between 0 and 1, 0.5 means no attraction/repulsion
+  static SpinDelta(a, b) {
     let sum = 0
-    for (let i = 0; i < this.spin.length; i++) {
-      sum += Particle.spinAttraction(this.spin[i], other.spin[i])
+    for (let i = 0; i < a.spin.length; i++) {
+      sum += Math.abs(b.spin[i] - a.spin[i]) / 2
     }
-    return sum / this.spin.length
+    return sum / a.spin.length
   }
 
   wrap(range=1) {
