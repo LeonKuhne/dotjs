@@ -60,12 +60,13 @@ export class Engine {
         // attract to other particles
         new Vector(this.particles[i], this.particles[j])
           .usingDistance(this.distanceFunc)
+          // react to other particles
           .gravitate(this.antigravity)
           // repel from walls
           //.antiwall()
           .delta,
-        // attract to center
         /*
+        // attract to center
         new Vector(this.particles[i], this.center)
           .gravitate(-this.centerGravity, this.gravityCurve)
           .delta,

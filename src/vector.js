@@ -28,10 +28,13 @@ export class Vector {
     return this
   }
 
-  gravitate(strength=0.05, curve=1, minDistance=0.2) {
+  gravitate(strength=0.05, curve=1, minDistance=0.5) {
     this.forSpaces(1, space => {
       const distance = this.distanceFunc(this.start, space)
       if (distance > minDistance) { return }
+      const spinDelta = this.start.spinDelta(this.end)
+      if (spinDelta == 0.5) { return }
+      let spin = spinDelta * 2 - 1
       const direction = this.start.direction(space)
       // reverse distance if strength is negative
       let negate = strength < 0
@@ -40,6 +43,8 @@ export class Vector {
       //const gravity = strength * (1 - Math.pow(distance, 2))
       //const gravity = strength / Math.tan(distance - Math.PI / 2 - .5)
       //const gravity = strength * (1 - Math.pow(distance, radius))
+      // add spin
+      gravity += spin
       // check if gravity is nan
       if (negate) gravity = -gravity
       this.add(-gravity, direction)
