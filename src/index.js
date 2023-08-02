@@ -127,6 +127,13 @@ window.onload = () => {
     minInteractionDistanceSlider.dispatchEvent(new Event('input'))
   }
 
+  // toggle sidebar menu
+  const menu = document.querySelector('.menu')
+  const menuToggle = document.querySelector('.toggleMenu')
+  menuToggle.addEventListener('click', e => {
+    menu.classList.toggle('hidden')
+    menuToggle.classList.toggle('active')
+  })
 
   // set distance function
   const distanceCode = document.querySelector('.distanceCode')

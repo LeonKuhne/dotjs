@@ -26,7 +26,6 @@
   opacity: 0.15;
   font-family: monospace;
   cursor: default;
-  padding-bottom: 1rem;
   animation: fadeout 1s;
 } .info:hover {
   animation: fadein 1s;
@@ -34,6 +33,21 @@
 } .info > * {
   margin-left: 1rem;
   margin-right: 1rem;
+} .head {
+  display: flex;
+} .head-text {
+  flex: 1;
+  padding-left: 0.75rem;
+} .toggleMenu {
+  margin-right: .75rem;
+} .toggleMenu:hover {
+  cursor: pointer;
+  color: #aaa;
+} .toggleMenu.active {
+  /* rotate 90 degrees */
+  transform: rotate(90deg);
+} .menu {
+  margin-bottom: 1rem;
 } .color-palette {
   display: flex;
   flex-wrap: wrap;
@@ -75,6 +89,10 @@
   position: relative;
   overflow: hidden;
   color:rgba(255, 255, 255, 0.1);
+} .hidden {
+  height: 0;
+  overflow-y: hidden;
+  margin-bottom: 0;
 } @keyframes fadein {
   from { opacity: 0.15; }
   to   { opacity: 0.75; } 
