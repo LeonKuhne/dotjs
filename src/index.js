@@ -180,18 +180,18 @@ window.onload = () => {
     document.querySelector('.spinCodeError'),
     document.querySelector('.spinCodePreset'),
     {
-      "euclidean chase": `\
-        let sum = 0
-        for (let i = 0; i < a.spin.length; i++) {
-          const j = (i + 1) % a.spin.length 
-          sum += (a.spin[i] + b.spin[j]) ** 2
-        }
-        return sum ** 0.5`,
       "euclidean repel": `\
         let sum = 0
         for (let i = 0; i < a.spin.length; i++) {
           const j = (i + 1) % a.spin.length 
           sum += (a.spin[i] - b.spin[j]) ** 2
+        }
+        return sum ** 0.5`,
+      "euclidean chase": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const j = (i + 1) % a.spin.length 
+          sum += (a.spin[i] + b.spin[j]) ** 2
         }
         return sum ** 0.5`,
       "repel": `\
