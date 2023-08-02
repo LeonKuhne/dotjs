@@ -1,4 +1,6 @@
 import { Engine } from './engine.js'
+import { CodeNode } from './codeNode.js'
+import { Particle } from './particle.js'
 
 window.onload = () => {
   // setup canvas
@@ -136,77 +138,106 @@ window.onload = () => {
   })
 
   // set distance function
-  const distanceCode = document.querySelector('.distanceCode')
-  const distanceCodeError = document.querySelector('.distanceCodeError')
-  const distanceCodePresets = {
-    "manhatten": `\
-      return Math.abs(a.x - b.x)
-        + Math.abs(a.y - b.y)`,
-    "euclidean": engine.distanceFunc.toString()
-      .replace(/.*\{/, '') // remove everything before the first {
-      .replace(/\}.*$/, '') // remove everything after the last }
-      .split('\n').map(l => l.replace(/^    /, '')).join('\n') // remove first four spaces of each line
-      .split('\n').filter(l => l.trim() !== '').join('\n'), // remove empty lines (including ones with just spaces)
-    "biquadratic": `\
-      return Math.pow(a.x - b.x, 2)
-        + Math.pow(a.y - b.y, 2)`,
-    "minkowski": `\
-      return Math.pow(
-        Math.pow(Math.abs(a.x - b.x), 3)
-          + Math.pow(Math.abs(a.y - b.y), 3),
-        1/3
-      )`,
-    "chebyshev": `\
-      return Math.max(
-        Math.abs(a.x - b.x),
-        Math.abs(a.y - b.y)
-      )`,
-    "wave": `\
-      return Math.abs(
-        Math.sin(a.x - b.x)
-          + Math.sin(a.y - b.y)
-      )`,
-  }
-  const selectedPreset = document.querySelector('.distanceCodePreset')
-  // add presets
-  for (let preset in distanceCodePresets) {
-    const option = document.createElement('option')
-    option.value = preset
-    option.innerText = preset
-    selectedPreset.appendChild(option)
-  }
-  // update code on preset
-  selectedPreset.addEventListener('change', e => {
-    // make code presentable
-    let code = distanceCodePresets[e.target.value]
-    const indent = code.match(/^ */)[0]
-    code = code.split('\n').map(l => l.replace(indent, '')).join('\n')
-    distanceCode.value = code
-    distanceCode.dispatchEvent(new Event('input'))
-  })
-  selectedPreset.dispatchEvent(new Event('change'))
-  distanceCode.value = localStorage.getItem('distanceCode') || distanceCodePresets[selectedPreset.value] 
-    //"chebyshev": `\
+  new CodeNode(
+    engine,
+    document.querySelector('.distanceCode'),
+    document.querySelector('.distanceCodeError'),
+    document.querySelector('.distanceCodePreset'),
+    {
+      "euclidean": engine.distanceFunc.toString()
+        .replace(/.*\{/, '') // remove everything before the first {
+        .replace(/\}.*$/, '') // remove everything after the last }
+        .split('\n').map(l => l.replace(/^      /, '')).join('\n') // remove first four spaces of each line
+        .split('\n').filter(l => l.trim() !== '').join('\n'), // remove empty lines (including ones with just spaces)
+      "manhatten": `\
+        return Math.abs(a.x - b.x)
+          + Math.abs(a.y - b.y)`,
+      "biquadratic": `\
+        return Math.pow(a.x - b.x, 2)
+          + Math.pow(a.y - b.y, 2)`,
+      "minkowski": `\
+        return Math.pow(
+          Math.pow(Math.abs(a.x - b.x), 3)
+            + Math.pow(Math.abs(a.y - b.y), 3),
+          1/3
+        )`,
+      "chebyshev": `\
+        return Math.max(
+          Math.abs(a.x - b.x),
+          Math.abs(a.y - b.y)
+        )`,
+      "wave": `\
+        return Math.abs(
+          Math.sin(a.x - b.x)
+            + Math.sin(a.y - b.y)
+        )`,
+  }, 'distanceCode', callback => engine.distanceFunc = callback)
 
-  if (distanceCode) {
-    distanceCode.addEventListener('input', e => {
-      // update code
-      try {
-        engine.distanceFunc = new Function('a', 'b', e.target.value)
-        distanceCode.style.borderColor = 'green'
-        distanceCodeError.innerText = ''
-      } catch (err) {
-        distanceCode.style.borderColor = 'red'
-        distanceCodeError.innerText = err.message
-      }
-      // cache code
-      localStorage.setItem('distanceCode', e.target.value)
-      // update height
-      const numLines = e.target.value.split('\n').length
-      e.target.style.height = `${numLines}rem`
-    })
-    distanceCode.dispatchEvent(new Event('input'))
-  }
+  // set spin function
+  new CodeNode(
+    engine,
+    document.querySelector('.spinCode'),
+    document.querySelector('.spinCodeError'),
+    document.querySelector('.spinCodePreset'),
+    {
+      "euclidean chase": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const j = (i + 1) % a.spin.length 
+          sum += (a.spin[i] + b.spin[j]) ** 2
+        }
+        return sum ** 0.5`,
+      "euclidean repel": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const j = (i + 1) % a.spin.length 
+          sum += (a.spin[i] - b.spin[j]) ** 2
+        }
+        return sum ** 0.5`,
+      "repel": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const j = (i + 1) % a.spin.length 
+          sum += a.spin[i] - b.spin[j]
+        }
+        return sum / a.spin.length`,
+      "average": Particle.SpinDelta.toString()
+        .replace(/.*\{/, '') // remove everything before the first {
+        .replace(/\}.*$/, '') // remove everything after the last }
+        .split('\n').map(l => l.replace(/^      /, '')).join('\n') // remove first four spaces of each line
+        .split('\n').filter(l => l.trim() !== '').join('\n'), // remove empty lines (including ones with just spaces)
+      "chase": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const j = (i + 1) % a.spin.length 
+          sum += a.spin[i] + b.spin[j]
+        }
+        return sum / a.spin.length`,
+      "abs square": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const spinA = a.spin[i]
+          const spinB = b.spin[i]
+          sum += spinA > spinB ? (spinA-spinB) ** 2 : (spinB-spinA) ** 2
+        }
+        return sum / a.spin.length`,
+      "avg squared": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const spinA = a.spin[i]
+          const spinB = b.spin[i]
+          sum += ((spinA - spinB) / 2) ** 2
+        }
+        return (sum / a.spin.length) ** 0.5`,
+      "avg abs error": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const spinA = a.spin[i]
+          const spinB = b.spin[i]
+          sum += Math.abs(spinA - spinB) / 2
+        }
+        return (sum / a.spin.length) ** 0.5`,
+    }, 'spinCode', callback => Particle.SpinDelta = callback)
 
   // start
   engine.run()
