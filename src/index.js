@@ -36,7 +36,11 @@ window.onload = () => {
     engine.add(paintSpin(), click)
   }
   // listeners
-  document.addEventListener('mousedown', e => mouseDown = true)
+  document.addEventListener('mousedown', e => {
+    if (e.target !== canvas) return
+    mouseDown = true
+    addParticles(e.clientX, e.clientY)
+  })
   document.addEventListener('mouseup', e => mouseDown = false)
   document.addEventListener('mousemove', e => 
     addParticles(e.clientX, e.clientY))
@@ -63,7 +67,6 @@ window.onload = () => {
       color.classList.add('color')
       color.style.background = `hsl(${i * 360/numColors}, 100%, ${b * 100/numBrightness}%)`
       const setColor = (e) => {
-        e.preventDefault()
         // parse background style to rgb array
         const rgb = e.target.style.background
           .replace('rgb(', '')
@@ -81,24 +84,27 @@ window.onload = () => {
   // update speed
   const speedSlider = document.querySelector('.setSpeed')
   if (speedSlider) {
-    speedSlider.addEventListener('input', 
-      e => engine.speed = e.target.value ** 2)
+    speedSlider.addEventListener('input', e => {
+      engine.speed = e.target.value ** 2
+    })
     speedSlider.dispatchEvent(new Event('input'))
   }
 
   // update spread
   const spreadSlider = document.querySelector('.setSpread')
   if (spreadSlider) {
-    spreadSlider.addEventListener('input', 
-      e => engine.antigravity = e.target.value)
+    spreadSlider.addEventListener('input', e => {
+      engine.antigravity = e.target.value
+    })
     spreadSlider.dispatchEvent(new Event('input'))
   }
 
   // update min interaction distance
   const minInteractionDistanceSlider = document.querySelector('.setMinInteractDistance')
   if (minInteractionDistanceSlider) {
-    minInteractionDistanceSlider.addEventListener('input', 
-      e => engine.minInteractDistance = e.target.value)
+    minInteractionDistanceSlider.addEventListener('input', e => {
+      engine.minInteractDistance = e.target.value
+    })
     minInteractionDistanceSlider.dispatchEvent(new Event('input'))
   }
 

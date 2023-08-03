@@ -22,6 +22,11 @@
   text-align: end;
   display: block;
   position: relative;
+} h2 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+} ol {
+  margin: 0;
 } .controls label {
   margin-top: -0.75rem;
   z-index: -1;
@@ -33,6 +38,7 @@
   font-family: monospace;
   cursor: default;
   animation: fadeout var(--menu-animation-speed);
+  user-select: none;
 } .info:hover {
   animation: fadein var(--menu-animation-speed);
   opacity: var(--menu-opacity-max);
@@ -58,6 +64,8 @@
   transform: rotate(90deg);
 } .menu {
   margin-bottom: 1rem;
+} .select-text {
+  user-select: text;
 } .instructions {
   margin-bottom: 1rem;
 } .instructions p {
