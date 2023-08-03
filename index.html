@@ -11,34 +11,39 @@
 <body>
   <div class="info">
     <div class="head">
-      <a class="toggleMenu"><h1>></h1></a>
       <h1 class="head-text">dot.js</h1>
+      <a class="toggleMenu"><h1>></h1></a>
     </div>
     <div class="menu">
-      <p>click to add particles</p>
-      <p>press space to pause</p>
-      <p>press r to reset</p>
+      <div class="instructions">
+        <p>click to add particles</p>
+        <p>press space to pause</p>
+        <p>press r to reset</p>
+      </div>
       <div class="color-palette"></div>
       <div class="controls menuContainer">
         <div class="menuTitle"><div>controls</div></div>
         <input class="setSpeed" type="range" title="speed"
           min="0" max="0.1" step="0.00001" />
+        <label>speed</label>
         <input class="setSpread" type="range" title="spread"
           min="0.01" max="0.1" step="0.001" />
+        <label>spread</label>
         <input class="setMinInteractDistance" type="range" title="min interact distance"
           min="0.01" max="1.0" step="0.001" />
+        <label>distance</label>
       </div>
-      <div class="menuContainer">
+      <div class="menuContainer codeMenu">
         <div class="menuTitle"><div>distance</div></div>
         <textarea class="distanceCode code" title="distance function"></textarea>
-        <div class="distanceCodeError code"></div>
-        <select class="distanceCodePreset"></select>
+        <div class="distanceCodeError code codeError"></div>
+        <select class="distanceCodePreset codePreset"></select>
       </div>
-      <div class="menuContainer">
+      <div class="menuContainer codeMenu">
         <div class="menuTitle"><div>spin</div></div>
         <textarea class="spinCode code" title="spin delta function"></textarea>
-        <div class="spinCodeError code"></div>
-        <select class="spinCodePreset"></select>
+        <div class="spinCodeError code codeError"></div>
+        <select class="spinCodePreset codePreset"></select>
       </div>
       <h2>todo</h2>
       <p>speed up using grid/zones</p>

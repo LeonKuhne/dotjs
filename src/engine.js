@@ -1,6 +1,7 @@
 import { Particle } from './particle.js'
 import { Position } from './position.js'
 import { Vector } from './vector.js'
+import { Timer } from './timer.js'
 
 // particle engine
 export class Engine {
@@ -63,30 +64,33 @@ export class Engine {
   }
 
   draw(ctx) {
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     const screenSize = this.screenSize()
     const borderSize = this.borderSize()
     ctx.beginPath()
 
     // draw particles
+    ctx.clearRect(borderSize.x, borderSize.y, screenSize.x, screenSize.y)
     for (let particle of this.particles) {
       particle.draw(ctx, borderSize, screenSize, this.color)
     }
 
-    // 0.04ms draw only portions of frame that are needed
-    for (let y = -1; y <= 1; y++) {
-      for (let x = -1; x <= 1; x++) {
-        if (x == 0 && y == 0) { continue }
-        // calculate position
-        const pos = new Position([x, y])
-          .multiply(screenSize)
-          .slide(borderSize)
-        // draw frame
-        ctx.drawImage(canvas, 
-          borderSize.x, borderSize.y, screenSize.x, screenSize.y,
-          pos.x, pos.y, screenSize.x, screenSize.y)
+    // 0.033ms draw only portions of frame that are needed
+    setTimeout(() => {
+      for (let y = -1; y <= 1; y++) {
+        for (let x = -1; x <= 1; x++) {
+          if (x == 0 && y == 0) { continue }
+          // calculate position
+          const pos = new Position([x, y])
+            .multiply(screenSize)
+            .slide(borderSize)
+          // draw frame
+          ctx.clearRect(pos.x, pos.y, screenSize.x, screenSize.y)
+          ctx.drawImage(canvas, 
+            borderSize.x, borderSize.y, screenSize.x, screenSize.y,
+            pos.x, pos.y, screenSize.x, screenSize.y)
+        }
       }
-    }
+    }, 0)
 
     // stamp
     ctx.stroke()

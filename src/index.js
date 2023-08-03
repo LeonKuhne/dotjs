@@ -7,7 +7,7 @@ window.onload = () => {
   // setup canvas
   const canvas = document.getElementById('canvas')
   canvas.width = document.body.clientWidth
-  canvas.height= document.body.clientHeight
+  canvas.height = document.body.clientHeight
 
   // setup engine
   const engine = new Engine(canvas)
@@ -104,8 +104,9 @@ window.onload = () => {
 
   // toggle sidebar menu
   const menu = document.querySelector('.menu')
+  const head = document.querySelector('.head')
   const menuToggle = document.querySelector('.toggleMenu')
-  menuToggle.addEventListener('click', e => {
+  head.addEventListener('click', e => {
     menu.classList.toggle('hidden')
     menuToggle.classList.toggle('active')
   })
@@ -144,7 +145,7 @@ window.onload = () => {
           Math.sin(a.x - b.x)
             + Math.sin(a.y - b.y)
         )`,
-  }, 'distanceCode', callback => engine.distanceFunc = callback)
+  }, callback => engine.distanceFunc = callback)
 
   // set spin function
   new CodeNode(
@@ -153,6 +154,14 @@ window.onload = () => {
     document.querySelector('.spinCodeError'),
     document.querySelector('.spinCodePreset'),
     {
+      "avg abs error": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const spinA = a.spin[i]
+          const spinB = b.spin[i]
+          sum += Math.abs(spinA - spinB) / 2
+        }
+        return (sum / a.spin.length) ** 0.5`,
       "euclidean repel": `\
         let sum = 0
         for (let i = 0; i < a.spin.length; i++) {
@@ -202,15 +211,7 @@ window.onload = () => {
           sum += ((spinA - spinB) / 2) ** 2
         }
         return (sum / a.spin.length) ** 0.5`,
-      "avg abs error": `\
-        let sum = 0
-        for (let i = 0; i < a.spin.length; i++) {
-          const spinA = a.spin[i]
-          const spinB = b.spin[i]
-          sum += Math.abs(spinA - spinB) / 2
-        }
-        return (sum / a.spin.length) ** 0.5`,
-    }, 'spinCode', callback => Particle.SpinDelta = callback)
+    }, callback => Particle.SpinDelta = callback)
 
   // start
   engine.run()
