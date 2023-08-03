@@ -10,7 +10,6 @@ export class Engine {
     this.drawDelay = 1000 / fps
     this.tickDelay = 1000 / tps
     this.canvas = canvas
-    this.batchSize = 0
     this.speed = 0.005
     this.wrap = true
     this.gravityCurve = 0.03
@@ -96,32 +95,14 @@ export class Engine {
     ctx.stroke()
   }
 
-  applyForces(pos, i, j) {
-    return pos
-      .slideMany([
-        // attract to other particles
-        new Vector(this.particles[i], this.particles[j])
-          .usingDistance(this.distanceFunc)
-          .gravitate(this.antigravity, this.minInteractDistance)
-          .delta,
-      ])
+  _forcesBetween(i, j) {
+    return new Vector(this.particles[i], this.particles[j])
+      .usingDistance(this.distanceFunc)
+      .gravitate(this.antigravity, this.minInteractDistance)
+      .delta
   }
 
-  runBatch(size) {
-    let deltas = {}
-    const rand = () => Math.floor(Math.random() * this.particles.length)
-    for (let batch = 0; batch < size; batch++) {
-      let [i, j] = [rand(), rand()]
-      //if (i == j) { continue }
-      if (deltas[i] == null) { deltas[i] = new Position([0, 0]) }
-      if (deltas[j] == null) { deltas[j] = new Position([0, 0]) }
-      deltas[i] = this.applyForces(deltas[i], i, j)
-      deltas[j] = this.applyForces(deltas[j].scale(-1), i, j)
-    }
-    return deltas
-  }
-
-  runOrdered() {
+  _particleDeltas() {
     // setup deltas
     let deltas = {}
     for (let i = 0; i < this.particles.length; i++) {
@@ -129,24 +110,22 @@ export class Engine {
     }
     // fill deltas
     for (let i = 0; i < this.particles.length; i++) {
-      for (let j = 0; j < this.particles.length; j++) {
+      for (let j = i+1; j < this.particles.length; j++) {
         if (i == j) { continue }
-        deltas[i] = this.applyForces(deltas[i], i, j)
-        //deltas[j] = this.applyForces(deltas[j].scale(-1), i, j)
+        const delta = this._forcesBetween(i, j)
+        deltas[i].slide(delta)
+        deltas[j].slide(delta.scale(-1))
       }
     }
     return deltas
   }
-
 
   tick() {
     // pause
     if (this.paused) { return }
 
     // calculate deltas
-    const deltas = this.batchSize == 0 
-      ? this.runOrdered()
-      : this.runBatch(this.batchSize)
+    const deltas = this._particleDeltas()
 
     // move
     for (let [i, delta] of Object.entries(deltas)) {
