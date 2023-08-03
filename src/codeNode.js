@@ -17,17 +17,16 @@ export class CodeNode {
       this.selectedElem.appendChild(option)
     }
 
-    // update code on preset
+    // update code on select preset
     this.selectedElem.addEventListener('change', e => {
-      // make code presentable
       let code = this.presets[e.target.value]
-      const indent = code.match(/^ */)[0]
-      code = code.split('\n').map(l => l.replace(indent, '')).join('\n')
-      this.codeElem.value = code
+      code = this._cleanCode(code)
+      this.codeElem.value = code 
       this.codeElem.dispatchEvent(new Event('input'))
     })
     this.selectedElem.dispatchEvent(new Event('change'))
-    this.codeElem.value = this.presets[this.selectedElem.value] 
+
+    // update code on input
     if (this.codeElem) {
       this.codeElem.addEventListener('input', e => {
         const code = e.target.value
@@ -46,5 +45,10 @@ export class CodeNode {
       })
       this.codeElem.dispatchEvent(new Event('input'))
     }
+  }
+
+  _cleanCode(code) {
+    const indent = code.match(/^ */)[0]
+    return code.split('\n').map(l => l.replace(indent, '')).join('\n')
   }
 }
