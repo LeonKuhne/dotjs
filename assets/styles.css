@@ -1,5 +1,9 @@
 :root {
   --menu-width: 15rem;
+  --menu-border: 1rem;
+  --menu-opacity-min: 0.15;
+  --menu-opacity-max: 0.85;
+  --menu-animation-speed: 0.25s;
 } html, body {
   width: 100%;
   height: 100%;
@@ -10,48 +14,60 @@
   width: 100%;
   height: 100%;
   background: #333;
-} .views {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-} .mainView, .dummyView {
-  width: 100%;
-  height: 100%;
+} input {
+  margin-left: 1rem;
+  width: calc(100% - 2rem);
+} label {
+  padding-right: 1rem;
+  text-align: end;
+  display: block;
+  position: relative;
+} .controls label {
+  margin-top: -0.75rem;
+  z-index: -1;
 } .info {
   position: absolute;
   z-index: 1;
   background: black;
-  opacity: 0.15;
+  opacity: var(--menu-opacity-min);
   font-family: monospace;
   cursor: default;
-  animation: fadeout 1s;
+  animation: fadeout var(--menu-animation-speed);
 } .info:hover {
-  animation: fadein 1s;
-  opacity: 0.75;
+  animation: fadein var(--menu-animation-speed);
+  opacity: var(--menu-opacity-max);
 } .info > * {
-  margin-left: 1rem;
-  margin-right: 1rem;
+  margin-left: var(--menu-border);
+  margin-right: var(--menu-border);
 } .head {
   display: flex;
+  margin: 0;
+  padding-left: var(--menu-border);
+  padding-right: var(--menu-border);
 } .head-text {
   flex: 1;
   padding-left: 0.75rem;
 } .toggleMenu {
   margin-right: .75rem;
-} .toggleMenu:hover {
+} .head:hover {
   cursor: pointer;
-  color: #aaa;
+} .head:hover .toggleMenu {
+  color: #0060df;
 } .toggleMenu.active {
   /* rotate 90 degrees */
   transform: rotate(90deg);
 } .menu {
   margin-bottom: 1rem;
+} .instructions {
+  margin-bottom: 1rem;
+} .instructions p {
+  margin: 0; 
 } .color-palette {
   display: flex;
   flex-wrap: wrap;
   width: var(--menu-width);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 } .color {
   width: calc(var(--menu-width) / 20);
   height: calc(var(--menu-width) / 20);
@@ -67,23 +83,26 @@
   overflow-y: hidden;
   width: var(--menu-width);
   border: none;
-  border-left: 3px solid black;
-  margin-left: -1rem;
   padding-left: 1rem;
   font-weight: bold;
+} .codeMenu {
+  border-left: 3px solid black;
 } .code:focus {
   outline: none;
-} .distanceCodePreset {
+} .codePreset {
   display: block; 
+  width: 100%;
+} .codeError {
+  color: red;
 } .menuContainer {
   background-color: rgba(255, 255, 255, 0.1);
   overflow: hidden;
   margin-left: 0;
 } .menuTitle {
-  height: 0;
+  height: 2rem;
   width: var(--menu-width);
   font-size: 3rem;
-  text-align: bottom;
+  margin-top: -0.5rem;
 } .menuTitle div {
   z-index: -1;
   position: relative;
@@ -94,9 +113,9 @@
   overflow-y: hidden;
   margin-bottom: 0;
 } @keyframes fadein {
-  from { opacity: 0.15; }
-  to   { opacity: 0.75; } 
+  from { opacity: var(--menu-opacity-min); }
+  to   { opacity: var(--menu-opacity-max); } 
 } @keyframes fadeout {
-  from { opacity: 0.75; }
-  to   { opacity: 0.15; } 
+  from { opacity: var(--menu-opacity-max); }
+  to   { opacity: var(--menu-opacity-min); } 
 }

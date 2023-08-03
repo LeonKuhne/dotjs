@@ -8,9 +8,7 @@ export class Position {
   }
 
   slide(offset) {
-    for (let i = 0; i < this.pos.length; i++) {
-      this.pos[i] += offset.pos[i]
-    }
+    this._updateEach((val, dim) => val + offset.pos[dim])
     return this
   }
 
@@ -22,9 +20,23 @@ export class Position {
   }
 
   scale(factor) {
-    for (let i = 0; i < this.pos.length; i++) {
-      this.pos[i] *= factor
-    }
+    this._updateEach((val, _) => val * factor)
+    return this
+  }
+
+  // assumes positions have same dimensions
+  multiply(other) {
+    this._updateEach((val, dim) => val * other.pos[dim])
+    return this
+  }
+
+  invert() {
+    this._updateEach((val, _) => 1 / val)
+    return this
+  }
+
+  mod(range) {
+    this._updateEach((val, _) => val % range)
     return this
   }
 
@@ -34,4 +46,12 @@ export class Position {
 
   get x() { return this.pos[0] }
   get y() { return this.pos[1] }
+  get z() { return this.pos[2] }
+
+  _updateEach(func) {
+    for (let i = 0; i < this.pos.length; i++) {
+      this.pos[i] = func(this.pos[i], i)
+    }
+  }
+
 }

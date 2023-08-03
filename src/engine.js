@@ -1,6 +1,7 @@
 import { Particle } from './particle.js'
 import { Position } from './position.js'
 import { Vector } from './vector.js'
+import { Timer } from './timer.js'
 
 // particle engine
 export class Engine {
@@ -12,19 +13,18 @@ export class Engine {
     this.batchSize = 0
     this.speed = 0.005
     this.wrap = true
-    this.centerGravity = 0
     this.gravityCurve = 0.03
     this.antigravity = 0.05
     this.minInteractDistance = 1
-    this.center = new Particle(0, [0.5, 0.5])
     this.color = (particle) => particle.spin
       .map((spin) => Math.floor(spin * 255))
       .fill(0, 3) // fill with black
     this.paused = true
     this.distanceFunc = Vector.euclideanDistance
+    this.screenFill = 2/3
   }
 
-  add(spin, position=[Math.random(), Math.random()]) {
+  add(spin, position=new Position([Math.random(), Math.random()])) {
     this.particles.push(new Particle(spin, position))
   }
 
@@ -33,7 +33,7 @@ export class Engine {
     // draw
     const ctx = this.canvas.getContext('2d')
     const draw = () => {
-      this.draw(ctx, this.canvas.width, this.canvas.height)
+      this.draw(ctx)
       setTimeout(() => requestAnimationFrame(draw), this.drawDelay)
     }
     requestAnimationFrame(draw)
@@ -46,12 +46,53 @@ export class Engine {
     run()
   }
 
-  draw(ctx, w, h) {
-    ctx.clearRect(0, 0, w, h)
+  // in pixels
+  screenSize() {
+    return new Position([
+      this.canvas.width * this.screenFill,
+      this.canvas.height * this.screenFill,
+    ])
+  }
+
+  // in pixels
+  borderSize() {
+    const screenSize = this.screenSize()
+    return new Position([
+      (this.canvas.width - screenSize.x) / 2,
+      (this.canvas.height - screenSize.y) / 2,
+    ])
+  }
+
+  draw(ctx) {
+    const screenSize = this.screenSize()
+    const borderSize = this.borderSize()
     ctx.beginPath()
+
+    // draw particles
+    ctx.clearRect(borderSize.x, borderSize.y, screenSize.x, screenSize.y)
     for (let particle of this.particles) {
-      particle.draw(ctx, w, h, this.color)
+      particle.draw(ctx, borderSize, screenSize, this.color)
     }
+
+    // 0.033ms draw only portions of frame that are needed
+    setTimeout(() => {
+      for (let y = -1; y <= 1; y++) {
+        for (let x = -1; x <= 1; x++) {
+          if (x == 0 && y == 0) { continue }
+          // calculate position
+          const pos = new Position([x, y])
+            .multiply(screenSize)
+            .slide(borderSize)
+          // draw frame
+          ctx.clearRect(pos.x, pos.y, screenSize.x, screenSize.y)
+          ctx.drawImage(canvas, 
+            borderSize.x, borderSize.y, screenSize.x, screenSize.y,
+            pos.x, pos.y, screenSize.x, screenSize.y)
+        }
+      }
+    }, 0)
+
+    // stamp
     ctx.stroke()
   }
 
@@ -61,17 +102,8 @@ export class Engine {
         // attract to other particles
         new Vector(this.particles[i], this.particles[j])
           .usingDistance(this.distanceFunc)
-          // react to other particles
           .gravitate(this.antigravity, this.minInteractDistance)
-          // repel from walls
-          //.antiwall()
           .delta,
-        /*
-        // attract to center
-        new Vector(this.particles[i], this.center)
-          .gravitate(-this.centerGravity, this.gravityCurve)
-          .delta,
-        */
       ])
   }
 

@@ -1,47 +1,14 @@
 import { Engine } from './engine.js'
 import { CodeNode } from './codeNode.js'
 import { Particle } from './particle.js'
+import { Position } from './position.js'
 
 window.onload = () => {
   // setup canvas
   const canvas = document.getElementById('canvas')
-  canvas.width = document.body.clientWidth / 3
-  canvas.height= document.body.clientHeight / 3
+  canvas.width = document.body.clientWidth
+  canvas.height = document.body.clientHeight
 
-  // surround the canvas with mirror views
-  const view = document.createElement('div')
-  view.classList.add('views')
-  document.body.appendChild(view)
-  // arrange views
-  canvas.remove()
-  for (let i = 0; i < 9; i++) {
-    const mirror = document.createElement('div')
-    view.appendChild(mirror)
-    if (i === 4) {
-      mirror.classList.add('mainView')
-      mirror.appendChild(canvas)
-      continue
-    }
-    mirror.classList.add('dummyView')
-    mirror.appendChild(canvas.cloneNode())
-  }
-
-  // create update mirror function
-  const mirrorFps = 60
-  const mirrorTo = (mirror) => {
-    const sourceCtx = canvas.getContext('2d')
-    const targetCtx = mirror.getContext('2d')
-    const [width, height] = [mirror.width, mirror.height]
-    targetCtx.clearRect(0, 0, width, height)
-    targetCtx.drawImage(canvas, 0, 0, width, height)
-  }
-
-  // every x seconds, update mirrors
-  setInterval(() => {
-    const views = document.querySelectorAll('.dummyView')
-    views.forEach(view => mirrorTo(view.children[0]))
-  }, 1000 / mirrorFps)
-    
   // setup engine
   const engine = new Engine(canvas)
   window.dot = engine
@@ -49,18 +16,24 @@ window.onload = () => {
 
   // add particles
   let mouseDown = false
-  let [lastX, lastY] = [0, 0]
+  let lastClick = new Position([0, 0])
   let minDelta = 5
   const addParticles = (clickX, clickY) => {
+    const click = new Position([clickX, clickY])
     if (!mouseDown 
-      || Math.abs(clickX - lastX) < minDelta 
-      || Math.abs(clickY - lastY) < minDelta
+      || Math.abs(click.x - lastClick.x) < minDelta 
+      || Math.abs(click.y - lastClick.y) < minDelta
     ) return
-    [lastX, lastY] = [clickX, clickY]
-    const rect = canvas.getBoundingClientRect()
-    const x = (clickX - rect.left) / canvas.width
-    const y = (clickY - rect.top) / canvas.height 
-    engine.add(paintSpin(), [x, y])
+    lastClick = click.copy()
+    // account for the screen offset
+    const borderSize = engine.borderSize()
+    const screenSize = engine.screenSize()
+    click 
+      .slide(borderSize.copy().scale(-1))
+      .multiply(screenSize.invert())
+      .slide(new Position([1, 1]))
+      .mod(1)
+    engine.add(paintSpin(), click)
   }
   // listeners
   document.addEventListener('mousedown', e => mouseDown = true)
@@ -131,8 +104,9 @@ window.onload = () => {
 
   // toggle sidebar menu
   const menu = document.querySelector('.menu')
+  const head = document.querySelector('.head')
   const menuToggle = document.querySelector('.toggleMenu')
-  menuToggle.addEventListener('click', e => {
+  head.addEventListener('click', e => {
     menu.classList.toggle('hidden')
     menuToggle.classList.toggle('active')
   })
@@ -171,7 +145,7 @@ window.onload = () => {
           Math.sin(a.x - b.x)
             + Math.sin(a.y - b.y)
         )`,
-  }, 'distanceCode', callback => engine.distanceFunc = callback)
+  }, callback => engine.distanceFunc = callback)
 
   // set spin function
   new CodeNode(
@@ -180,6 +154,14 @@ window.onload = () => {
     document.querySelector('.spinCodeError'),
     document.querySelector('.spinCodePreset'),
     {
+      "avg abs error": `\
+        let sum = 0
+        for (let i = 0; i < a.spin.length; i++) {
+          const spinA = a.spin[i]
+          const spinB = b.spin[i]
+          sum += Math.abs(spinA - spinB) / 2
+        }
+        return (sum / a.spin.length) ** 0.5`,
       "euclidean repel": `\
         let sum = 0
         for (let i = 0; i < a.spin.length; i++) {
@@ -229,15 +211,7 @@ window.onload = () => {
           sum += ((spinA - spinB) / 2) ** 2
         }
         return (sum / a.spin.length) ** 0.5`,
-      "avg abs error": `\
-        let sum = 0
-        for (let i = 0; i < a.spin.length; i++) {
-          const spinA = a.spin[i]
-          const spinB = b.spin[i]
-          sum += Math.abs(spinA - spinB) / 2
-        }
-        return (sum / a.spin.length) ** 0.5`,
-    }, 'spinCode', callback => Particle.SpinDelta = callback)
+    }, callback => Particle.SpinDelta = callback)
 
   // start
   engine.run()
