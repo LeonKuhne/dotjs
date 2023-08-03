@@ -10,15 +10,6 @@
   width: 100%;
   height: 100%;
   background: #333;
-} .views {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-} .mainView, .dummyView {
-  width: 100%;
-  height: 100%;
 } .info {
   position: absolute;
   z-index: 1;
@@ -83,7 +74,7 @@
   height: 0;
   width: var(--menu-width);
   font-size: 3rem;
-  text-align: bottom;
+  text-align: end;
 } .menuTitle div {
   z-index: -1;
   position: relative;
