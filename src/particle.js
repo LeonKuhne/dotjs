@@ -5,31 +5,36 @@ export class Particle extends Position {
   // pos only 2 dimensions currently supported
   constructor(
     spin = 0.5,
-    pos = new Position([0.5, 0.5]),
+    pos = new Position([0, 0]),
   ) {
     super(pos.pos)
     this.spin = spin
     this.size = 8
   }
 
-  draw(ctx, borderSize, screenSize, color=(_) => [150,150,150]) {
+  draw(gfx, borderSize, screenSize, color=(_) => [150,150,150]) {
+    gfx.color(new Position(color))
+    this._drawParticle(gfx, this.x, this.y)
+    /*
     ctx.fillStyle = `rgb(${color(this).join(',')})`
     const offset = this.copy().multiply(screenSize)
     const pos = offset.copy().slide(borderSize)
     // draw particle
-    this._drawParticle(ctx, pos.x, pos.y)
+    this._drawParticle(gfx, pos.x, pos.y)
     // draw on top if near bottom
     if (offset.y + this.size > screenSize.y) {
-      this._drawParticle(ctx, pos.x, borderSize.y + (this.y - 1) * screenSize.y)
+      this._drawParticle(gfx, pos.x, borderSize.y + (this.y - 1) * screenSize.y)
     }
     // draw on left if near right
     if (offset.x + this.size > screenSize.x) {
-      this._drawParticle(ctx, borderSize.x + (this.x - 1) * screenSize.x, pos.y)
+      this._drawParticle(gfx, borderSize.x + (this.x - 1) * screenSize.x, pos.y)
     }
+    */
   }
 
-  _drawParticle(ctx, x, y) {
-    ctx.fillRect(x, y, this.size, this.size)
+  _drawParticle(gfx, x, y) {
+    gfx.drawPoint(new Position([x, y]))
+    //ctx.fillRect(x, y, this.size, this.size)
   }
 
   spinDelta(other) { 

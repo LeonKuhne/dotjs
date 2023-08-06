@@ -1,7 +1,7 @@
 import { Particle } from './particle.js'
 import { Position } from './position.js'
 import { Vector } from './vector.js'
-import { Timer } from './timer.js'
+import { Graphics } from './graphics.js'
 
 // particle engine
 export class Engine {
@@ -30,19 +30,19 @@ export class Engine {
   run() {
     this.paused = false
     // draw
-    const ctx = this.canvas.getContext('2d')
+    const gfx = new Graphics(this.canvas, this.screenSize(), this.screenFill)
     const draw = () => {
-      this.draw(ctx)
+      this.draw(gfx)
       setTimeout(() => requestAnimationFrame(draw), this.drawDelay)
     }
     requestAnimationFrame(draw)
     // run
-    const run = () => {
+    const loop = () => {
       this.tick()
-      setTimeout(run, this.tickDelay)
+      setTimeout(loop, this.tickDelay)
     }
     // dispatch
-    run()
+    loop()
   }
 
   // in pixels
@@ -62,17 +62,17 @@ export class Engine {
     ])
   }
 
-  draw(ctx) {
+  draw(gfx) {
     const screenSize = this.screenSize()
     const borderSize = this.borderSize()
-    ctx.beginPath()
+    gfx.clear()
 
     // draw particles
-    ctx.clearRect(borderSize.x, borderSize.y, screenSize.x, screenSize.y)
     for (let particle of this.particles) {
-      particle.draw(ctx, borderSize, screenSize, this.color)
+      particle.draw(gfx, borderSize, screenSize, this.color)
     }
 
+    /*
     // 0.033ms draw only portions of frame that are needed
     setTimeout(() => {
       for (let y = -1; y <= 1; y++) {
@@ -90,9 +90,9 @@ export class Engine {
         }
       }
     }, 0)
+    */
 
-    // stamp
-    ctx.stroke()
+    gfx.stamp()
   }
 
   _forcesBetween(i, j) {

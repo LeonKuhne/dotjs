@@ -48,6 +48,10 @@ export class Position {
   get y() { return this.pos[1] }
   get z() { return this.pos[2] }
 
+  float32Array() {
+    return new Float32Array(this.pos)
+  }
+
   _updateEach(func) {
     for (let i = 0; i < this.pos.length; i++) {
       this.pos[i] = func(this.pos[i], i)
