@@ -1,12 +1,12 @@
 import { Particle } from './particle.js'
-import { Position } from './position.js'
+import { Pos } from './pos.js'
 import { Vector } from './vector.js'
 import { Timer } from './timer.js'
+import { Grid } from './grid.js'
 
 // particle engine
 export class Engine {
   constructor(canvas, fps = 60, tps = 60) {
-    this.particles = []
     this.drawDelay = 1000 / fps
     this.tickDelay = 1000 / tps
     this.canvas = canvas
@@ -21,10 +21,11 @@ export class Engine {
     this.paused = true
     this.distanceFunc = Vector.euclideanDistance
     this.screenFill = 2/3
+    this.grid = new Grid(canvas, 30)
   }
 
-  add(spin, position=new Position([Math.random(), Math.random()])) {
-    this.particles.push(new Particle(spin, position))
+  add(spin, position=new Pos([Math.random(), Math.random()])) {
+    this.grid.track(new Particle(spin, position))
   }
 
   run() {
@@ -47,7 +48,7 @@ export class Engine {
 
   // in pixels
   screenSize() {
-    return new Position([
+    return new Pos([
       this.canvas.width * this.screenFill,
       this.canvas.height * this.screenFill,
     ])
@@ -56,7 +57,7 @@ export class Engine {
   // in pixels
   borderSize() {
     const screenSize = this.screenSize()
-    return new Position([
+    return new Pos([
       (this.canvas.width - screenSize.x) / 2,
       (this.canvas.height - screenSize.y) / 2,
     ])
@@ -69,9 +70,7 @@ export class Engine {
 
     // draw particles
     ctx.clearRect(borderSize.x, borderSize.y, screenSize.x, screenSize.y)
-    for (let particle of this.particles) {
-      particle.draw(ctx, borderSize, screenSize, this.color)
-    }
+    this.grid.draw()
 
     // 0.033ms draw only portions of frame that are needed
     setTimeout(() => {
@@ -79,12 +78,12 @@ export class Engine {
         for (let x = -1; x <= 1; x++) {
           if (x == 0 && y == 0) { continue }
           // calculate position
-          const pos = new Position([x, y])
+          const pos = new Pos([x, y])
             .multiply(screenSize)
             .slide(borderSize)
           // draw frame
           ctx.clearRect(pos.x, pos.y, screenSize.x, screenSize.y)
-          ctx.drawImage(canvas, 
+          ctx.drawImage(this.canvas, 
             borderSize.x, borderSize.y, screenSize.x, screenSize.y,
             pos.x, pos.y, screenSize.x, screenSize.y)
         }
@@ -95,47 +94,18 @@ export class Engine {
     ctx.stroke()
   }
 
-  _forcesBetween(i, j) {
-    return new Vector(this.particles[i], this.particles[j])
-      .usingDistance(this.distanceFunc)
-      .gravitate(this.antigravity, this.minInteractDistance)
-      .delta
-  }
-
-  _particleDeltas() {
-    // setup deltas
-    let deltas = {}
-    for (let i = 0; i < this.particles.length; i++) {
-      deltas[i] = new Position([0, 0])
-    }
-    // fill deltas
-    for (let i = 0; i < this.particles.length; i++) {
-      for (let j = i+1; j < this.particles.length; j++) {
-        if (i == j) { continue }
-        const delta = this._forcesBetween(i, j)
-        deltas[i].slide(delta)
-        deltas[j].slide(delta.scale(-1))
-      }
-    }
-    return deltas
-  }
-
   tick() {
-    // pause
     if (this.paused) { return }
 
-    // calculate deltas
-    const deltas = this._particleDeltas()
+    // compute deltas
+    this.grid.deltas((particle, neighbor, _, offset, distance) => {
+      neighbor = neighbor.copy().add(offset)
+      particle.react(neighbor, offset, distance)
+    })
 
     // move
-    for (let [i, delta] of Object.entries(deltas)) {
-      // ignore nan deltas
-      if (delta.x != delta.x || delta.y != delta.y) { continue }
-
-      let particle = this.particles[i]
-        .slide(delta.scale(this.speed))
-      this.wrap ? particle.wrap() : particle.collideBounds()
-    }
+    this.grid.eachParticle((particle) => 
+      particle.apply(this.airFriction, this.heatSpeed, this.wrap, this.speed))
   }
 
   // 

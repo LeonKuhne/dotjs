@@ -1,7 +1,7 @@
 import { Engine } from './engine.js'
 import { CodeNode } from './codeNode.js'
 import { Particle } from './particle.js'
-import { Position } from './position.js'
+import { Pos } from './pos.js'
 
 window.onload = () => {
   // setup canvas
@@ -16,10 +16,10 @@ window.onload = () => {
 
   // add particles
   let mouseDown = false
-  let lastClick = new Position([0, 0])
+  let lastClick = new Pos([0, 0])
   let minDelta = 5
   const addParticles = (clickX, clickY) => {
-    const click = new Position([clickX, clickY])
+    const click = new Pos([clickX, clickY])
     if (!mouseDown 
       || Math.abs(click.x - lastClick.x) < minDelta 
       || Math.abs(click.y - lastClick.y) < minDelta
@@ -28,11 +28,21 @@ window.onload = () => {
     // account for the screen offset
     const borderSize = engine.borderSize()
     const screenSize = engine.screenSize()
+    /* old way (todo remove)
     click 
       .slide(borderSize.copy().scale(-1))
       .multiply(screenSize.invert())
-      .slide(new Position([1, 1]))
+      .slide(new Pos([1, 1]))
       .mod(1)
+   */
+  // new way (faster)
+   click.map((val, dim) => {
+      val -= borderSize.pos[dim]
+      val *= screenSize.invert().pos[dim]
+      val += 1
+      val %= 1
+      return val
+    })
     engine.add(paintSpin(), click)
   }
   // listeners

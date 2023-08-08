@@ -1,10 +1,10 @@
-import { Position } from "./position.js"
+import { Pos } from "./pos.js"
 
-export class Vector {
+export class Vector extends Pos {
   constructor(start, end) {
+    super(new Array(start.length).fill(0))
     this.start = start
     this.end = end
-    this.delta = new Position([0, 0])
     this.wallForce = 0.01
     this.distanceFunc = this.euclideanDistance
   }
@@ -21,7 +21,7 @@ export class Vector {
   }
 
   add(distance, direction) {
-    this.delta.slide(new Position([
+    this.slide(new Pos([
       Math.cos(direction) * distance,
       Math.sin(direction) * distance,
     ]))
@@ -67,7 +67,7 @@ export class Vector {
   forSpaces(spaces, callback) {
     for (let x = -spaces; x < spaces+1; x++) {
       for (let y = -spaces; y < spaces+1; y++) {
-        callback(this.end.copy().slide(new Position([x, y])))
+        callback(this.end.copy().slide(new Pos([x, y])))
       }
     }
     return this

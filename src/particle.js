@@ -1,15 +1,25 @@
-import { Position } from './position.js'
+import { Pos } from './pos.js'
+import { Force } from './force.js'
+import { Vector } from './vector.js'
 
-export class Particle extends Position {
+export class Particle extends Pos {
+  static count = 0
   // spin can be either a number or a list of numbers
   // pos only 2 dimensions currently supported
   constructor(
     spin = 0.5,
-    pos = new Position([0.5, 0.5]),
+    pos = new Pos([0.5, 0.5]),
   ) {
-    super(pos.pos)
+    super(pos)
+    this.id = Particle.count++
+    this.force = new Force(new Pos([0, 0]))
+    // features
     this.spin = spin
     this.size = 8
+    this.heat = 0.5
+    this.friction = 0.1
+    this.antigravity = 0.05
+    this.minInteractDistance = 1
   }
 
   draw(ctx, borderSize, screenSize, color=(_) => [150,150,150]) {
@@ -28,8 +38,45 @@ export class Particle extends Position {
     }
   }
 
-  _drawParticle(ctx, x, y) {
-    ctx.fillRect(x, y, this.size, this.size)
+  draw_from_erode(ctx, zone, particleSize, color=null) {
+    if (!color) {
+      color = this.feat('color')
+      const red = Math.floor((this.feat("heat") + 1) / 2 * 256)
+      ctx.fillStyle = `rgb(${red}, ${color[1]}, ${color[2]})`
+    } else {
+      ctx.fillStyle = color
+    }
+    const x = zone.x + this.x - particleSize/2 - .5
+    const y = zone.y + this.y - particleSize/2 - .5
+    ctx.fillRect(x, y, particleSize, particleSize)
+  }
+
+  attract_from_erode(other, offset, amount) {
+    const delta = other.copy()
+    delta.add(offset)
+    delta.subtract(this)
+    delta.normalize()
+    delta.multiply(amount)
+    delta.multiply(this.feat('mass')/other.feat('mass'))
+    delta.multiply(this.feat('heat')/other.feat('heat'))
+    delta.multiply(1 - this.feat("friction"))
+    other.forceQueue.subtract(delta)
+  }
+
+  // onedirectional
+  react(other, distanceFunc) {
+    const delta = new Vector(this, other)
+      .usingDistance(distanceFunc)
+      .gravitate(this.antigravity, this.minInteractDistance)
+    this.force.slide(delta)
+  }
+
+  apply(airFriction, heatSpeed, wrap, speed) {
+    this.force.scale(speed)
+    this.force.applyVelocity(airFriction)
+    this.force.applyHeat(heatSpeed)
+    this.force.reset()
+    wrap ? this.wrap() : this.collideBounds()
   }
 
   spinDelta(other) { 
@@ -61,6 +108,10 @@ export class Particle extends Position {
   }
 
   copy() {
-    return new Particle([...this.spin], new Position([...this.pos]))
+    return new Particle([...this.spin], new Pos([...this.pos]))
+  }
+
+  _drawParticle(ctx, x, y) {
+    ctx.fillRect(x, y, this.size, this.size)
   }
 }
