@@ -20,22 +20,33 @@ export class Particle extends Pos {
     this.friction = 0.1
     this.antigravity = 0.05
     this.minInteractDistance = 1
+    this.updateColor()
   }
 
-  draw(ctx, borderSize, screenSize, color=(_) => [150,150,150]) {
-    ctx.fillStyle = `rgb(${color(this).join(',')})`
+  updateColor() {
+    this.color = this.spin
+      .map((spin) => Math.floor(spin * 255))
+      // limit to 3 elements, fill with black
+      .fill(0, 3) .slice(0, 3) 
+      // convert to hex
+      .reduce((acc, val) => acc + val.toString(16).padStart(2, '0'), '#')
+  }
+
+  draw(ctx, borderSize, screenSize, color=null) {
+    ctx.fillStyle = color || this.color
     const offset = this.copy().multiply(screenSize)
     const pos = offset.copy().slide(borderSize)
-    // draw particle
     this._drawParticle(ctx, pos.x, pos.y)
-    // draw on top if near bottom
+    // duplicate on top if near bottom
+    /*
     if (offset.y + this.size > screenSize.y) {
       this._drawParticle(ctx, pos.x, borderSize.y + (this.y - 1) * screenSize.y)
     }
-    // draw on left if near right
+    // duplicate on left if near right
     if (offset.x + this.size > screenSize.x) {
       this._drawParticle(ctx, borderSize.x + (this.x - 1) * screenSize.x, pos.y)
     }
+    */
   }
 
   draw_from_erode(ctx, zone, particleSize, color=null) {
@@ -57,8 +68,8 @@ export class Particle extends Pos {
     delta.subtract(this)
     delta.normalize()
     delta.multiply(amount)
-    delta.multiply(this.feat('mass')/other.feat('mass'))
-    delta.multiply(this.feat('heat')/other.feat('heat'))
+    delta.multiply(this.feat('mass') / other.feat('mass'))
+    delta.multiply(this.feat('heat') / other.feat('heat'))
     delta.multiply(1 - this.feat("friction"))
     other.forceQueue.subtract(delta)
   }
@@ -73,7 +84,7 @@ export class Particle extends Pos {
 
   apply(airFriction, heatSpeed, wrap, speed) {
     this.force.scale(speed)
-    this.force.applyVelocity(this, airFriction)
+    this.force.applyVelocity(this, this.friction, airFriction)
     this.force.applyHeat(this, heatSpeed)
     this.force.reset()
     wrap ? this.wrap() : this.collideBounds()
@@ -84,27 +95,28 @@ export class Particle extends Pos {
   }
 
   // between 0 and 1, 0.5 means no attraction/repulsion
-  static SpinDelta(a, b) {
+  // expects same length spin vectors
+  static SpinDelta(particle, other) {
     let sum = 0
-    for (let i = 0; i < a.spin.length; i++) {
-      sum += Math.abs(b.spin[i] - a.spin[i]) / 2
-    }
-    return sum / a.spin.length
+    particle.spin.each((val, i) => {
+      sum += Math.abs(other.spin[i] - val) / 2
+    })
+    return sum / particle.spin.length
   }
 
   wrap(range=1) {
-    for (let i = 0; i < this.length; i++) {
-      if (this[i] <= 0) { 
-        this[i] += range }
-      else { this[i] %= range }
-    }
+    this.map((val, _) => {
+      if (val <= 0) return val + range 
+      return val % range
+    })
   }
 
   collideBounds(range=1) {
-    for (let i = 0; i < this.length; i++) {
-      if (this[i] < 0) { this[i] = 0 }
-      else if (this[i] > range) { this[i] = range }
-    }
+    this.map((val, _) => {
+      if (val < 0) return 0
+      if (val > range) return range
+      return val
+    })
   }
 
   copy() {

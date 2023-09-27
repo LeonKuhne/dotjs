@@ -8,10 +8,9 @@ export class Force extends Pos {
     this.forceQueue = new Pos([0, 0])
   }
 
-  applyVelocity(particle, airFriction) {
+  applyVelocity(particle, friction, airFriction) {
     this.vel.add(this.forceQueue)
-    this.vel.scale(1 - airFriction)
-    this.vel.scale(1 - this.friction)
+    this.vel.scale((1 - friction) * (1 - airFriction))
     particle.add(this.vel)
   }
 

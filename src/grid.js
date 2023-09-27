@@ -5,12 +5,10 @@ export class Grid {
 
   constructor(canvas, gridSize) {
     this.gridSize = gridSize
-    this.zones = []
-    this.particles = {}
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
-    this.canvas.addEventListener('resize', this.resize)
-    this.resize()
+    this.cells = new Pos([0, 0])
+    this.zones = []
   }
 
   track(particle) {
@@ -18,33 +16,13 @@ export class Grid {
     zone.insert(particle)
   }
 
-  find(id) {
-    return this.particles[id]
+  resize(paneSize) {
+    const newCells = paneSize.copy().map((val, _) => Math.ceil(val / this.gridSize))
+    this.fixZones(newCells)
   }
 
-  resize() {
-    this.cols = Math.ceil(this.canvas.width / this.gridSize)
-    this.rows = Math.ceil(this.canvas.height / this.gridSize)
-    this.height = this.rows * this.gridSize 
-    this.width = this.cols * this.gridSize
-    this.canvas.width = this.width
-    this.canvas.height = this.height
-    // create zones
-    for (let col=0; col<this.cols; col++) {
-      const columns = []
-      for (let row=0; row<this.rows; row++) {
-        columns.push(new Zone(col, row))
-      }
-      this.zones.push(columns)
-    }
-  }
-
-  draw(borderSize, screenSize) {
-    this.ctx.clearRect(0, 0, this.width, this.height)
-    this.ctx.fillStyle = "#000000"
-    this.ctx.fillRect(0, 0, this.width, this.height)
-    const zoneSize = new Pos([this.width / this.cols, this.height / this.rows])
-    this.eachZone(zone => zone.draw(this.ctx, zoneSize, borderSize, screenSize))
+  draw(offset, size) {
+    this.eachZone(zone => zone.draw(this.ctx, offset, size, this.gridSize))
   }
 
   applyForces(airFriction, heatSpeed, wrap, speed) {
@@ -75,37 +53,36 @@ export class Grid {
   // 
   // GRID RESIZING
 
-  fixZones(newCols, newRows) {
+  fixZones(newCells) {
     console.info("fixing zones")
-    if (this.cols != newCols) this.fixCols(newCols)
-    if (this.rows != newRows) this.fixRows(newRows) 
-    const oldCols = this.cols
-    const oldRows = this.rows 
-    this.eachZone(zone => zone.fix(this.gridSize))
-    if (this.cols != this.zones.length || this.zones && this.rows != this.zones[0].length) {
-      console.warn(`failed fixing zones!!! ${oldCols}x${oldRows} -> ${this.cols}x${this.rows} != ${this.zones.length}x${this.zones ? this.zones[0].length : null}`)
+    const oldCells = this.cells.copy()
+    if (this.cells.x != newCells.x) this.fixCols(newCells.x)
+    if (this.cells.y != newCells.y) this.fixRows(newCells.y) 
+    // TODO remove this check once we're sure it works
+    if (this.cells.x != this.zones.length || this.zones && this.cells.y != this.zones[0].length) {
+      console.warn(`failed fixing zones!!! ${oldCells.toString()} -> ${this.cells.toString()} != ${this.zones.length}x${this.zones ? this.zones[0].length : null}`)
     }
   }
 
   fixCols(cols) {
-    if (cols < this.cols) this.removeColumns(cols)
+    if (cols < this.cells.x) this.removeColumns(cols)
     else this.addColums(cols)
-    this.cols = cols
+    this.cells.x = cols
   }
 
   fixRows(rows) {
-    if (rows < this.rows) this.removeRows(rows)
+    if (rows < this.cells.y) this.removeRows(rows)
     else this.addRows(rows)
-    this.rows = rows
+    this.cells.y = rows
   }
 
    // assumes oldCols > newCols
   removeColumns(newCols) {
-    const deletedCols = this.zones.splice(newCols, this.cols - newCols)
+    const deletedCols = this.zones.splice(newCols, this.cells.x - newCols)
     // move particles from dead zones
     for (let zone of deletedCols) {
       for (let particle of zone.particles) {
-        const newCol = zone.x % this.cols 
+        const newCol = zone.x % this.cells.x
         this.zones[newCol][zone.y].particles.push(particle)
       }
       zone.particles = []
@@ -115,7 +92,7 @@ export class Grid {
   // assumes oldRows > newRows
   removeRows(newRows) {
     for (let x=0;x<this.zones.length;x++) {
-      const deletedRows = this.zones[x].splice(this.rows, newRows)
+      const deletedRows = this.zones[x].splice(this.cells.y, newRows)
       // move particles from dead zones
       for (let zone of deletedRows) {
         for (let particle of zone.particles) {
@@ -129,9 +106,9 @@ export class Grid {
 
   // assumes newCols > oldCols
   addColums(cols) {
-    for (let x=this.cols;x<cols;x++) {
+    for (let x=this.cells.x;x<cols;x++) {
       this.zones.push([])
-      for (let y=0;y<this.rows;y++) {
+      for (let y=0;y<this.cells.y;y++) {
         const zone = new Zone(x, y, this.minDist)
         this.zones[x].push(zone)
       }
@@ -140,8 +117,8 @@ export class Grid {
 
   // assumes newRows > oldRows
   addRows(rows) {
-    for (let x=0;x<this.cols;x++) {
-      for (let y=this.rows;y<rows;y++) {
+    for (let x=0;x<this.cells.x;x++) {
+      for (let y=this.cells.y;y<rows;y++) {
         const zone = new Zone(x, y, this.minDist)
         this.zones[x].push(zone)
       }
@@ -152,8 +129,8 @@ export class Grid {
   // HELPERS
 
   eachZone(callback) {
-    for (let col=0; col<this.cols; col++) {
-      for (let row=0; row<this.rows; row++) {
+    for (let col=0; col<this.cells.x; col++) {
+      for (let row=0; row<this.cells.y; row++) {
         callback(this.zones[col][row])
       }
     }
@@ -164,13 +141,13 @@ export class Grid {
     // setup columns, wrap sides
     for (let c=-1;c<2;c++) {
       let col = zone.x + c
-      if      (col < 0)          col += this.cols 
-      else if (col >= this.cols) col -= this.cols
+      if      (col < 0)          col += this.cells.x
+      else if (col >= this.cells.x) col -= this.cells.x
       // setup rows, within bounds
       for (let r=-1;r<2;r++) {
         let row = zone.y + r
-        if      (row < 0)          row += this.rows
-        else if (row >= this.rows) row -= this.rows
+        if      (row < 0)          row += this.cells.y
+        else if (row >= this.cells.y) row -= this.cells.y
         // add zone
         nearby.push({
           zone: this.zones[col][row],
@@ -189,8 +166,7 @@ export class Grid {
         // ignore self
         if (other == particle) continue
         // out of range
-        const nOffset = offset.copy()
-        nOffset.scale(this.minDist)
+        const nOffset = offset.copy().scale(this.minDist)
         const distance = particle.distance(other, nOffset)
         if (distance > this.minDist) continue
         // add particle

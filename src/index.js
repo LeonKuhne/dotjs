@@ -26,23 +26,11 @@ window.onload = () => {
     ) return
     lastClick = click.copy()
     // account for the screen offset
-    const borderSize = engine.borderSize()
-    const screenSize = engine.screenSize()
-    /* old way (todo remove)
-    click 
-      .slide(borderSize.copy().scale(-1))
-      .multiply(screenSize.invert())
-      .slide(new Pos([1, 1]))
+    click
+      .subtract(engine.paneOffset)
+      .divide(engine.paneSize)
+      .slideFactor(1)
       .mod(1)
-   */
-  // new way (faster)
-   click.map((val, dim) => {
-      val -= borderSize[dim]
-      val *= screenSize.invert()[dim]
-      val += 1
-      val %= 1
-      return val
-    })
     engine.add(paintSpin(), click)
   }
   // listeners

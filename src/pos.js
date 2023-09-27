@@ -11,6 +11,11 @@ export class Pos extends Array {
     return this
   }
 
+  slideFactor(factor) {
+    this.map((val, _) => val + factor)
+    return this
+  }
+
   slideMany(offsets) {
     for (let offset of offsets) {
       this.slide(offset)
@@ -25,6 +30,11 @@ export class Pos extends Array {
 
   multiply(other) {
     this.map((val, dim) => val * other[dim])
+    return this
+  }
+
+  divide(other) {
+    this.map((val, dim) => val / other[dim])
     return this
   }
 
@@ -48,9 +58,26 @@ export class Pos extends Array {
     return this
   }
 
-  distance(other, offset) {
+  normalize() {
+    this.scale(1 / this.magnitude())
+    return this
+  }
+  
+  round() {
+    this.map((val, _) => Math.round(val))
+    return this
+  }
+
+  delta(other, offset) {
     this.map((val, i) => other[i] + offset[i] - val)
-    return this.magnitude()
+    return this
+  }
+
+
+  distance(other, offset) {
+    return this.copy()
+      .delta(other, offset)
+      .magnitude()
   }
 
   direction(other) {
@@ -67,10 +94,6 @@ export class Pos extends Array {
     let sum = 0
     this.each(val => sum += val)
     return sum
-  }
-
-  normalize() {
-    this.scale(1 / this.magnitude())
   }
 
   //

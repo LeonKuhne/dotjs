@@ -16,17 +16,20 @@ export class Engine {
     this.airFriction = 0
     this.heatSpeed = 0
     this.minInteractDistance = 1
-    this.color = (particle) => particle.spin
-      .map((spin) => Math.floor(spin * 255))
-      .fill(0, 3) // fill with black
     this.paused = true
     this.distanceFunc = Vector.euclideanDistance
     this.screenFill = 2/3
     this.grid = new Grid(canvas, 30)
+    this.canvas.addEventListener('resize', () => this.resize())
+    this.resize()
   }
 
   add(spin, pos=new Pos([Math.random(), Math.random()])) {
     this.grid.track(new Particle(spin, pos))
+  }
+
+  resize() {
+    this.grid.resize(this.paneSize)
   }
 
   run() {
@@ -47,49 +50,36 @@ export class Engine {
     run()
   }
 
-  // in pixels
-  screenSize() {
-    return new Pos([
-      this.canvas.width * this.screenFill,
-      this.canvas.height * this.screenFill,
-    ])
-  }
-
-  // in pixels
-  borderSize() {
-    const screenSize = this.screenSize()
-    return new Pos([
-      (this.canvas.width - screenSize.x) / 2,
-      (this.canvas.height - screenSize.y) / 2,
-    ])
-  }
+  get canvasSize() { return new Pos([this.canvas.width, this.canvas.height]) }
+  get paneSize() { return this.canvasSize.scale(this.screenFill).round() }
+  get paneOffset() { return this.canvasSize.scale((1 - this.screenFill) / 2).round() }
 
   draw(ctx) {
-    const screenSize = this.screenSize()
-    const borderSize = this.borderSize()
     ctx.beginPath()
 
     // draw particles
-    ctx.clearRect(borderSize.x, borderSize.y, screenSize.x, screenSize.y)
-    this.grid.draw(borderSize, screenSize)
+    this.grid.draw(this.paneOffset, this.paneSize)
 
+    // duplicate to sides
     // 0.033ms draw only portions of frame that are needed
+    /* 
     setTimeout(() => {
       for (let y = -1; y <= 1; y++) {
         for (let x = -1; x <= 1; x++) {
           if (x == 0 && y == 0) { continue }
           // calculate position
           const pos = new Pos([x, y])
-            .multiply(screenSize)
-            .slide(borderSize)
+            .multiply(paneSize)
+            .slide(paneOffset)
           // draw frame
-          ctx.clearRect(pos.x, pos.y, screenSize.x, screenSize.y)
+          ctx.clearRect(pos.x, pos.y, paneSize.x, paneSize.y)
           ctx.drawImage(this.canvas, 
-            borderSize.x, borderSize.y, screenSize.x, screenSize.y,
-            pos.x, pos.y, screenSize.x, screenSize.y)
+            paneOffset.x, paneOffset.y, paneSize.x, paneSize.y,
+            pos.x, pos.y, paneSize.x, paneSize.y)
         }
       }
     }, 0)
+    */
 
     // stamp
     ctx.stroke()
