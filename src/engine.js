@@ -1,7 +1,6 @@
 import { Particle } from './particle.js'
 import { Pos } from './pos.js'
 import { Vector } from './vector.js'
-import { Timer } from './timer.js'
 import { Grid } from './grid.js'
 
 // particle engine
@@ -14,6 +13,8 @@ export class Engine {
     this.wrap = true
     this.gravityCurve = 0.03
     this.antigravity = 0.05
+    this.airFriction = 0
+    this.heatSpeed = 0
     this.minInteractDistance = 1
     this.color = (particle) => particle.spin
       .map((spin) => Math.floor(spin * 255))
@@ -24,8 +25,8 @@ export class Engine {
     this.grid = new Grid(canvas, 30)
   }
 
-  add(spin, position=new Pos([Math.random(), Math.random()])) {
-    this.grid.track(new Particle(spin, position))
+  add(spin, pos=new Pos([Math.random(), Math.random()])) {
+    this.grid.track(new Particle(spin, pos))
   }
 
   run() {
@@ -70,7 +71,7 @@ export class Engine {
 
     // draw particles
     ctx.clearRect(borderSize.x, borderSize.y, screenSize.x, screenSize.y)
-    this.grid.draw()
+    this.grid.draw(borderSize, screenSize)
 
     // 0.033ms draw only portions of frame that are needed
     setTimeout(() => {
@@ -96,16 +97,7 @@ export class Engine {
 
   tick() {
     if (this.paused) { return }
-
-    // compute deltas
-    this.grid.deltas((particle, neighbor, _, offset, distance) => {
-      neighbor = neighbor.copy().add(offset)
-      particle.react(neighbor, offset, distance)
-    })
-
-    // move
-    this.grid.eachParticle((particle) => 
-      particle.apply(this.airFriction, this.heatSpeed, this.wrap, this.speed))
+    this.grid.applyForces(this.airFriction, this.heatSpeed, this.wrap, this.speed)
   }
 
   // 

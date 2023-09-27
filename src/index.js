@@ -37,8 +37,8 @@ window.onload = () => {
    */
   // new way (faster)
    click.map((val, dim) => {
-      val -= borderSize.pos[dim]
-      val *= screenSize.invert().pos[dim]
+      val -= borderSize[dim]
+      val *= screenSize.invert()[dim]
       val += 1
       val %= 1
       return val

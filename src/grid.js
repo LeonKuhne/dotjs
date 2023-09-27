@@ -1,6 +1,5 @@
 import { Zone } from './zone.js'
 import { Pos } from './pos.js'
-import { Particle } from './particle.js'
 
 export class Grid {
 
@@ -14,19 +13,9 @@ export class Grid {
     this.resize()
   }
 
-  add(particle) {
-    throw new Error("fix this function by combining code")
-
-    // original add method
-    this.particles[particle.id] = particle
-    this.applyDeltas(particle)
-
-    // zone add method
-    const zone = this.getZone(pos)
-    const offset = this.getOffset(pos)
-    const particle = new Particle(offset, features)
-    this.applyDeltas
-    zone.add(particle)
+  track(particle) {
+    const zone = this.getZone(particle)
+    zone.insert(particle)
   }
 
   find(id) {
@@ -40,37 +29,46 @@ export class Grid {
     this.width = this.cols * this.gridSize
     this.canvas.width = this.width
     this.canvas.height = this.height
+    // create zones
+    for (let col=0; col<this.cols; col++) {
+      const columns = []
+      for (let row=0; row<this.rows; row++) {
+        columns.push(new Zone(col, row))
+      }
+      this.zones.push(columns)
+    }
   }
 
-  draw() {
+  draw(borderSize, screenSize) {
     this.ctx.clearRect(0, 0, this.width, this.height)
     this.ctx.fillStyle = "#000000"
     this.ctx.fillRect(0, 0, this.width, this.height)
-    this.eachZone(zone => zone.draw(this.ctx))
+    const zoneSize = new Pos([this.width / this.cols, this.height / this.rows])
+    this.eachZone(zone => zone.draw(this.ctx, zoneSize, borderSize, screenSize))
   }
 
-  deltas(callback) {
-    // compute deltas 
-    this.pairs((particle, neighbor, zone, offset, distance) => {
-      callback(particle, neighbor, zone, offset, distance)
+  applyForces(airFriction, heatSpeed, wrap, speed) {
+    // compute forces between particles
+    this.pairs((particle, neighbor, _, offset, distance) => {
+      neighbor = neighbor.copy().add(offset)
+      particle.react(neighbor, offset, distance)
     })
-    // apply deltas
+    // apply forces to particles
     this.eachParticle((particle, zone) => {
-      particle.apply(this.airFriction, this.heatSpeed)
-      this.applyDeltas(particle, zone)
+      particle.apply(airFriction, heatSpeed, wrap, speed)
+      this.applyParticleDeltas(particle, zone)
     })
   }
 
-  applyDeltas(particle, zone=null) {
-    const col = this.wrapColumn(zone.col, particle)
-    const row = this.stopRow(zone.row, particle)
-    // update zone
-    if (col != zone.col || row != zone.row) {
+  applyParticleDeltas(particle, zone) {
+    const particleZone = this.getZone(particle)
+    // check for change
+    if (particleZone.copy().subtract(zone).sum() > 0) {
       // remove from prev zone 
       const idx = zone.particles.indexOf(particle)
       zone.particles.splice(idx, 1)
       // add to new zone
-      this.zones[col][row].add(particle)
+      particleZone.insert(particle)
     }
   }
 
@@ -78,6 +76,7 @@ export class Grid {
   // GRID RESIZING
 
   fixZones(newCols, newRows) {
+    console.info("fixing zones")
     if (this.cols != newCols) this.fixCols(newCols)
     if (this.rows != newRows) this.fixRows(newRows) 
     const oldCols = this.cols
@@ -106,8 +105,8 @@ export class Grid {
     // move particles from dead zones
     for (let zone of deletedCols) {
       for (let particle of zone.particles) {
-        const newCol = zone.col % this.cols 
-        this.zones[newCol][zone.row].particles.push(particle)
+        const newCol = zone.x % this.cols 
+        this.zones[newCol][zone.y].particles.push(particle)
       }
       zone.particles = []
     }
@@ -120,8 +119,8 @@ export class Grid {
       // move particles from dead zones
       for (let zone of deletedRows) {
         for (let particle of zone.particles) {
-          const newRow = zone.row % newRows
-          this.zones[zone.col][newRow].particles.push(particle)
+          const newRow = zone.y % newRows
+          this.zones[zone.x][newRow].particles.push(particle)
         }
         zone.particles = []
       }
@@ -153,9 +152,9 @@ export class Grid {
   // HELPERS
 
   eachZone(callback) {
-    for (let column of this.zones) {
-      for (let z=0;z<column.length;z++) {
-        callback(column[z])
+    for (let col=0; col<this.cols; col++) {
+      for (let row=0; row<this.rows; row++) {
+        callback(this.zones[col][row])
       }
     }
   }
@@ -164,13 +163,14 @@ export class Grid {
     const nearby = []
     // setup columns, wrap sides
     for (let c=-1;c<2;c++) {
-      let col = zone.col + c
+      let col = zone.x + c
       if      (col < 0)          col += this.cols 
       else if (col >= this.cols) col -= this.cols
       // setup rows, within bounds
       for (let r=-1;r<2;r++) {
-        const row = zone.row + r
-        if (row < 0 || row >= this.rows) continue
+        let row = zone.y + r
+        if      (row < 0)          row += this.rows
+        else if (row >= this.rows) row -= this.rows
         // add zone
         nearby.push({
           zone: this.zones[col][row],
@@ -221,5 +221,10 @@ export class Grid {
     this.eachParticleNeighbors((particle, neighbors) => 
       neighbors.forEach(({ particle: neighbor, zone, offset, distance }) => 
         callback(particle, neighbor, zone, offset, distance)))
+  }
+
+  getZone(pos) {
+    const [col, row] = pos.copy().map((val, _) => Math.floor(val * this.gridSize))
+    return this.zones[col][row]
   }
 }

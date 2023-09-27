@@ -3,8 +3,11 @@ export class Pos extends Array {
     super(...pos)
   }
 
+  // 
+  // methods assumes positions have same dimensions
+
   slide(offset) {
-    this.map((val, dim) => val + offset.pos[dim])
+    this.map((val, dim) => val + offset[dim])
     return this
   }
 
@@ -20,9 +23,8 @@ export class Pos extends Array {
     return this
   }
 
-  // assumes positions have same dimensions
   multiply(other) {
-    this.map((val, dim) => val * other.pos[dim])
+    this.map((val, dim) => val * other[dim])
     return this
   }
 
@@ -42,17 +44,12 @@ export class Pos extends Array {
   }
 
   subtract(other) {
-    this.map((val, dim) => val - other.pos[dim])
-    return this
-  }
-
-  divide(factor) {
-    this.map((val, _) => val / factor)
+    this.map((val, dim) => val - other[dim])
     return this
   }
 
   distance(other, offset) {
-    this.map((val, i) => other.pos[i] + offset.pos[i] - val)
+    this.map((val, i) => other[i] + offset[i] - val)
     return this.magnitude()
   }
 
@@ -62,14 +59,18 @@ export class Pos extends Array {
 
   magnitude() {
     let sum = 0
-    for (let val of this) {
-      sum += val ** 2
-    }
+    this.each(val => sum += val ** 2)
     return sum ** .5
   }
 
+  sum() {
+    let sum = 0
+    this.each(val => sum += val)
+    return sum
+  }
+
   normalize() {
-    this.divide(this.magnitude())
+    this.scale(1 / this.magnitude())
   }
 
   //
@@ -80,9 +81,19 @@ export class Pos extends Array {
   }
   
   map(func) {
+    this.each((val, i) => this[i] = func(val, i))
+    return this
+  }
+
+  each(callback) {
     for (let i = 0; i < this.length; i++) {
-      this[i] = func(this[i], i)
+      callback(this[i], i)
     }
+    return this
+  }
+
+  toString() {
+    return `(${this.join(", ")})`
   }
 
   //

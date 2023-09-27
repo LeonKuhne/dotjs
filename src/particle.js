@@ -73,8 +73,8 @@ export class Particle extends Pos {
 
   apply(airFriction, heatSpeed, wrap, speed) {
     this.force.scale(speed)
-    this.force.applyVelocity(airFriction)
-    this.force.applyHeat(heatSpeed)
+    this.force.applyVelocity(this, airFriction)
+    this.force.applyHeat(this, heatSpeed)
     this.force.reset()
     wrap ? this.wrap() : this.collideBounds()
   }
@@ -93,22 +93,22 @@ export class Particle extends Pos {
   }
 
   wrap(range=1) {
-    for (let i = 0; i < this.pos.length; i++) {
-      if (this.pos[i] <= 0) { 
-        this.pos[i] += range }
-      else { this.pos[i] %= range }
+    for (let i = 0; i < this.length; i++) {
+      if (this[i] <= 0) { 
+        this[i] += range }
+      else { this[i] %= range }
     }
   }
 
   collideBounds(range=1) {
-    for (let i = 0; i < this.pos.length; i++) {
-      if (this.pos[i] < 0) { this.pos[i] = 0 }
-      else if (this.pos[i] > range) { this.pos[i] = range }
+    for (let i = 0; i < this.length; i++) {
+      if (this[i] < 0) { this[i] = 0 }
+      else if (this[i] > range) { this[i] = range }
     }
   }
 
   copy() {
-    return new Particle([...this.spin], new Pos([...this.pos]))
+    return new Particle([...this.spin], new Pos([...this]))
   }
 
   _drawParticle(ctx, x, y) {

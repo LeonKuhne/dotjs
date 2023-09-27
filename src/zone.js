@@ -1,37 +1,30 @@
 import { Pos } from "./pos.js"
 
 export class Zone extends Pos {
-  constructor(col, row, size) {
-    super(col * size, row * size)
+  constructor(col, row) {
+    super([col, row])
     this.particles = []
-    this.col = col
-    this.row = row
-    this.size = size
-    this.color = "#aaaaaa"
+    this.color = () => [Math.random() * 255, Math.random() * 255, Math.random() * 255]
   }
 
-  fix(size) {
-    this.x = this.col * size
-    this.y = this.row * size
-  }
-
-  draw(ctx) {
+  draw(ctx, zoneSize, borderSize, screenSize) {
+    const globalPos = this.copy().multiply(zoneSize)
     ctx.font = "18px Arial"
     ctx.strokeStyle = this.color
     ctx.fillStyle = this.color
-    ctx.strokeRect(this.x-.5, this.y-.5, this.size-.5, this.size-.5)
-    ctx.fillText(this.particles.length, this.x-.5 + this.size/3, this.y-.5 + this.size*3/4)
+    ctx.strokeRect(globalPos.x-.5, globalPos.y-.5, zoneSize.x-.5, zoneSize.y-.5)
+    ctx.fillText(this.particles.length, globalPos.x-.5 + zoneSize/3, globalPos.y-.5 + zoneSize*3/4)
     // draw particles
     for (let particle of this.particles) {
-      particle.draw(ctx, borderSize, screenSize, this, this.color)
+      particle.draw(ctx, borderSize, screenSize, this.color)
     }
   }
 
-  add(particle) {
+  insert(particle) {
     this.particles.push(particle)
   }
 
   toString() {
-    return `table: (${this.col},${this.row}), pos: (${this.pos.join(", ")}), size: ${this.size}`
+    return `table: ${super.toString()}, pos: ${this.absPos.toString()}, size: ${this.size}`
   }
 }
