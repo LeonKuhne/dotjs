@@ -16,14 +16,14 @@ export class Zone extends Pos {
     const size = gridSize - 0.5 // align to grid
 
     // clear zone
-    ctx.clearRect(pos.x, pos.y, size.x, size.y)
+    ctx.clearRect(pos.x, pos.y, size, size)
     ctx.fillStyle = "#000000"
-    ctx.fillRect(pos.x, pos.y, size.x, size.y)
+    ctx.fillRect(pos.x, pos.y, size, size)
 
     // draw zone border
     ctx.strokeStyle = this.color
     ctx.fillStyle = this.color
-    ctx.strokeRect(pos.x, pos.y, size.x, size.y)
+    ctx.strokeRect(pos.x, pos.y, size, size)
 
     // draw particle count
     ctx.font = "18px Arial"

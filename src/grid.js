@@ -3,12 +3,13 @@ import { Pos } from './pos.js'
 
 export class Grid {
 
-  constructor(canvas, gridSize) {
+  constructor(canvas, gridSize, distanceFunc) {
     this.gridSize = gridSize
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
     this.cells = new Pos([0, 0])
     this.zones = []
+    this.distanceFunc = distanceFunc
   }
 
   track(particle) {
@@ -25,28 +26,31 @@ export class Grid {
     this.eachZone(zone => zone.draw(this.ctx, offset, size, this.gridSize))
   }
 
-  applyForces(airFriction, heatSpeed, wrap, speed) {
-    // compute forces between particles
-    this.pairs((particle, neighbor, _, offset, distance) => {
-      neighbor = neighbor.copy().add(offset)
-      particle.react(neighbor, offset, distance)
+  tick(antigravity, airFriction, heatSpeed, speed, wrap) {
+    // compute forces: onedirectional
+    this.pairs(({ particle, other, distance }) => {
+      if (distance == 0) return
+      const normal = particle.copy().subtract(other).normalize()
+      particle.applyGravity(other, normal, distance, antigravity, this.gridSize)
     })
-    // apply forces to particles
+    // apply forces
     this.eachParticle((particle, zone) => {
-      particle.apply(airFriction, heatSpeed, wrap, speed)
-      this.applyParticleDeltas(particle, zone)
+      particle.applyJitter()
+      particle.force.scale(speed)
+      particle.tick(airFriction, heatSpeed, wrap)
+      this.fixParticleZone(particle, zone)
     })
   }
 
-  applyParticleDeltas(particle, zone) {
-    const particleZone = this.getZone(particle)
-    // check for change
-    if (particleZone.copy().subtract(zone).sum() > 0) {
+  fixParticleZone(particle, zone) {
+    const newZone = this.getZone(particle)
+    // check for zone change
+    if (zone.copy().subtract(newZone).sum() > 0) {
       // remove from prev zone 
       const idx = zone.particles.indexOf(particle)
       zone.particles.splice(idx, 1)
       // add to new zone
-      particleZone.insert(particle)
+      newZone.particles.push(particle)
     }
   }
 
@@ -58,7 +62,7 @@ export class Grid {
     const oldCells = this.cells.copy()
     if (this.cells.x != newCells.x) this.fixCols(newCells.x)
     if (this.cells.y != newCells.y) this.fixRows(newCells.y) 
-    // TODO remove this check once we're sure it works
+    // TODO remove this check once it works
     if (this.cells.x != this.zones.length || this.zones && this.cells.y != this.zones[0].length) {
       console.warn(`failed fixing zones!!! ${oldCells.toString()} -> ${this.cells.toString()} != ${this.zones.length}x${this.zones ? this.zones[0].length : null}`)
     }
@@ -109,7 +113,7 @@ export class Grid {
     for (let x=this.cells.x;x<cols;x++) {
       this.zones.push([])
       for (let y=0;y<this.cells.y;y++) {
-        const zone = new Zone(x, y, this.minDist)
+        const zone = new Zone(x, y, this.gridSize)
         this.zones[x].push(zone)
       }
     }
@@ -119,7 +123,7 @@ export class Grid {
   addRows(rows) {
     for (let x=0;x<this.cells.x;x++) {
       for (let y=this.cells.y;y<rows;y++) {
-        const zone = new Zone(x, y, this.minDist)
+        const zone = new Zone(x, y, this.gridSize)
         this.zones[x].push(zone)
       }
     }
@@ -136,49 +140,21 @@ export class Grid {
     }
   }
 
-   getNearby(zone) {
+  getNearby(zone) {
     const nearby = []
-    // setup columns, wrap sides
+    const wrapCell = (cell, max) => {
+      if (cell < 0) return cell + max
+      else if (cell >= max) return cell - max
+      else return cell
+    }
     for (let c=-1;c<2;c++) {
-      let col = zone.x + c
-      if      (col < 0)          col += this.cells.x
-      else if (col >= this.cells.x) col -= this.cells.x
-      // setup rows, within bounds
+      let col = wrapCell(zone.x + c, this.cells.x)
       for (let r=-1;r<2;r++) {
-        let row = zone.y + r
-        if      (row < 0)          row += this.cells.y
-        else if (row >= this.cells.y) row -= this.cells.y
-        // add zone
-        nearby.push({
-          zone: this.zones[col][row],
-          offset: new Pos([c, r])
-        })
+        let row = wrapCell(zone.y + r, this.cells.y)
+        nearby.push(this.zones[col][row])
       }
     }
     return nearby
-  }
-
-  /** @returns Array of {particle, zone, offset, distance} */
-  getNearbyParticles(particle, zone) {
-    const particles = []
-    for (let {zone: nearZone, offset} of this.getNearby(zone)) {
-      for (let other of nearZone.particles) {
-        // ignore self
-        if (other == particle) continue
-        // out of range
-        const nOffset = offset.copy().scale(this.minDist)
-        const distance = particle.distance(other, nOffset)
-        if (distance > this.minDist) continue
-        // add particle
-        particles.push({
-          particle: other,
-          zone: nearZone,
-          offset: offset,
-          distance: distance,
-        })
-      }
-    }
-    return particles
   }
 
   eachParticle(callback) {
@@ -187,20 +163,30 @@ export class Grid {
         callback(particle, zone)))
   }
 
-  eachParticleNeighbors(callback) {
-    this.eachParticle((particle, zone) => 
-      callback(particle, this.getNearbyParticles(particle, zone)))
+  getNearbyVectors(particle, zone) {
+    const vectors = []
+    for (let otherZone of this.getNearby(zone)) {
+      for (let other of otherZone.particles) {
+        if (other == particle) continue // ignore self
+        const distance = this.distanceFunc(particle, other)
+        if (distance > 1) continue // out of range
+        vectors.push({ particle, other, distance })
+      }
+    }
+    return vectors 
   }
 
-  /** @callback_params (particle, neighbor, zone, offset, distance) */
+  eachNearbyVector(callback) {
+    this.eachParticle((particle, zone) => 
+      callback(this.getNearbyVectors(particle, zone)))
+  }
+
   pairs(callback) {
-    this.eachParticleNeighbors((particle, neighbors) => 
-      neighbors.forEach(({ particle: neighbor, zone, offset, distance }) => 
-        callback(particle, neighbor, zone, offset, distance)))
+    this.eachNearbyVector(neighbors => neighbors.forEach(callback))
   }
 
   getZone(pos) {
-    const [col, row] = pos.copy().map((val, _) => Math.floor(val * this.gridSize))
+    const [col, row] = pos.copy().map((val, i) => Math.floor((val % 1) * this.cells[i]))
     return this.zones[col][row]
   }
 }

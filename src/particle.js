@@ -1,25 +1,20 @@
 import { Pos } from './pos.js'
-import { Force } from './force.js'
-import { Vector } from './vector.js'
 
 export class Particle extends Pos {
   static count = 0
   // spin can be either a number or a list of numbers
   // pos only 2 dimensions currently supported
-  constructor(
-    spin = 0.5,
-    pos = new Pos([0.5, 0.5]),
-  ) {
+  constructor(spin = 0.5, pos = new Pos([0.5, 0.5])) {
     super(pos)
     this.id = Particle.count++
-    this.force = new Force(new Pos([0, 0]))
+    this.force = new Pos([0, 0])
+    this.velocity = new Pos([0, 0])
     // features
     this.spin = spin
     this.size = 8
     this.heat = 0.5
     this.friction = 0.1
-    this.antigravity = 0.05
-    this.minInteractDistance = 1
+    this.wallForce = 0.01
     this.updateColor()
   }
 
@@ -74,21 +69,56 @@ export class Particle extends Pos {
     other.forceQueue.subtract(delta)
   }
 
-  // onedirectional
-  react(other, distanceFunc) {
-    const delta = new Vector(this, other)
-      .usingDistance(distanceFunc)
-      .gravitate(this.antigravity, this.minInteractDistance)
-    this.force.slide(delta)
+  tick(airFriction, heatSpeed, wrap, maxSpeed=0.01) {
+    this.applyFriction(airFriction)
+    this.applyHeat(heatSpeed)
+    // limit speed (TODO use log or something smooth that works with inifinity)
+    this.velocity.map((val, _) => Math.min(Math.max(-maxSpeed, val), maxSpeed))
+    this.velocity.slide(this.force)
+    this.slide(this.velocity)
+    wrap ? this.wrap() : this.collideBounds()
+    this.force.zero()
   }
 
-  apply(airFriction, heatSpeed, wrap, speed) {
-    this.force.scale(speed)
-    this.force.applyVelocity(this, this.friction, airFriction)
-    this.force.applyHeat(this, heatSpeed)
-    this.force.reset()
-    wrap ? this.wrap() : this.collideBounds()
+  applyHeat(speed) {
+    const impact = this.magnitude() / Math.sqrt(2)
+    const heat = this.heat
+    this.heat = Math.tanh(heat + (impact * 2 - 1) * speed)
   }
+
+  applyFriction(airFriction) {
+    this.velocity.scale((1 - this.friction) * (1 - airFriction))
+  }
+
+  //
+  // FORCES
+  
+  applyJitter(amount=0.01) {
+    const jitter = (Math.random() - .5) * amount
+    this.force.slide(new Pos([jitter, jitter]))
+  }
+
+  applyGravity(other, normal, distance, strength=0.05, curve=1) {
+    let spin = this.spinDelta(other) * 2 - 1
+    let gravity = Math.pow((spin * strength / distance), curve)
+    //const gravity = strength * (1 - Math.pow(distance, 2))
+    //const gravity = strength / Math.tan(distance - Math.PI / 2 - .5)
+    //const gravity = strength * (1 - Math.pow(distance, radius))
+    this.force.slide(normal.scale(gravity * spin))
+  }
+
+  /*
+  applyAntiwall() {
+    // get distance from walls
+    const left = this.x 
+    const top = this.y
+    // add force to move away from walls
+    if (left < .5) this.force.slide([left * this.wallForce, 0])
+    else this.force.slide([(1 - left) * this.wallForce, Math.PI])
+    if (top < .5) this.force.slide([top * this.wallForce, Math.PI / 2])
+    else this.force slide([(1 - top) * this.wallForce, Math.PI * 3 / 2])  
+  }
+  */
 
   spinDelta(other) { 
     return Particle.SpinDelta(this, other)
@@ -106,8 +136,9 @@ export class Particle extends Pos {
 
   wrap(range=1) {
     this.map((val, _) => {
+      val %= range
       if (val <= 0) return val + range 
-      return val % range
+      return val
     })
   }
 

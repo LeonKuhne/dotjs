@@ -122,7 +122,7 @@ window.onload = () => {
     document.querySelector('.distanceCodeError'),
     document.querySelector('.distanceCodePreset'),
     {
-      "euclidean": engine.distanceFunc.toString()
+      "euclidean": engine.grid.distanceFunc.toString()
         .replace(/.*\{/, '') // remove everything before the first {
         .replace(/\}.*$/, '') // remove everything after the last }
         .split('\n').map(l => l.replace(/^      /, '')).join('\n') // remove first four spaces of each line

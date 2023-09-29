@@ -1,6 +1,5 @@
 import { Particle } from './particle.js'
 import { Pos } from './pos.js'
-import { Vector } from './vector.js'
 import { Grid } from './grid.js'
 
 // particle engine
@@ -13,13 +12,11 @@ export class Engine {
     this.wrap = true
     this.gravityCurve = 0.03
     this.antigravity = 0.05
-    this.airFriction = 0
+    this.airFriction = 0.05
     this.heatSpeed = 0
-    this.minInteractDistance = 1
     this.paused = true
-    this.distanceFunc = Vector.euclideanDistance
     this.screenFill = 2/3
-    this.grid = new Grid(canvas, 30)
+    this.grid = new Grid(canvas, 30, Engine.euclideanDistance)
     this.canvas.addEventListener('resize', () => this.resize())
     this.resize()
   }
@@ -87,7 +84,7 @@ export class Engine {
 
   tick() {
     if (this.paused) { return }
-    this.grid.applyForces(this.airFriction, this.heatSpeed, this.wrap, this.speed)
+    this.grid.tick(this.antigravity, this.airFriction, this.heatSpeed, this.speed, this.wrap)
   }
 
   // 
@@ -107,5 +104,11 @@ export class Engine {
 
   reset() {
     this.particles = []
+  }
+
+  static euclideanDistance(a, b) {
+    return Math.sqrt(
+      (a.x - b.x) ** 2 +
+      (a.y - b.y) ** 2)
   }
 }

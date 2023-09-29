@@ -38,6 +38,11 @@ export class Pos extends Array {
     return this
   }
 
+  divideFactor(factor) {
+    this.map((val, _) => val / factor)
+    return this
+  }
+
   invert() {
     this.map((val, _) => 1 / val)
     return this
@@ -59,7 +64,7 @@ export class Pos extends Array {
   }
 
   normalize() {
-    this.scale(1 / this.magnitude())
+    this.divideFactor(this.magnitude())
     return this
   }
   
@@ -73,6 +78,10 @@ export class Pos extends Array {
     return this
   }
 
+  zero() {
+    this.fill(0)
+    return this
+  }
 
   distance(other, offset) {
     return this.copy()
