@@ -10,11 +10,13 @@ export class Grid {
     this.cells = new Pos([0, 0])
     this.zones = []
     this.distanceFunc = distanceFunc
+    this.changingZones = new Set()
   }
 
   track(particle) {
     const zone = this.getZone(particle)
     zone.insert(particle)
+    this.markForUpdate(zone)
   }
 
   resize(paneSize) {
@@ -23,35 +25,51 @@ export class Grid {
   }
 
   draw(offset, size) {
-    this.eachZone(zone => zone.draw(this.ctx, offset, size, this.gridSize))
+    this.changingZones.forEach(zone => {
+      zone.clear(this.ctx, offset, this.gridSize)
+      zone.draw(this.ctx, offset, size)
+    })
+    this.changingZones = new Set()
   }
 
   tick(antigravity, airFriction, heatSpeed, speed, wrap) {
     // compute forces: onedirectional
-    this.pairs(({ particle, other, distance }) => {
+    this.pairs(({ particle, other, otherOffset, distance }) => {
+      const delta = particle.copy().subtract(otherOffset)
       if (distance == 0) return
-      const normal = particle.copy().subtract(other).normalize()
-      particle.applyGravity(other, normal, distance, antigravity, this.gridSize)
+      particle.applyGravity(other, delta, distance, antigravity, this.gridSize)
+      //particle.applyJitter()  // only apply jitter on interacting particles ???
     })
     // apply forces
+    const moving = (particle) => !particle.velocity.every(x => x == 0)
     this.eachParticle((particle, zone) => {
-      particle.applyJitter()
       particle.force.scale(speed)
       particle.tick(airFriction, heatSpeed, wrap)
-      this.fixParticleZone(particle, zone)
+      if (moving(particle)) { 
+        this.fixParticleZone(particle, zone) 
+      }
     })
   }
 
   fixParticleZone(particle, zone) {
-    const newZone = this.getZone(particle)
+    const zoneOffset = particle.copy().floor()
+    const newZonePos = zone.copy().slide(zoneOffset)
+    const newZone = this.zones[newZonePos.x][newZonePos.y]
+    this.markForUpdate(zone)
     // check for zone change
     if (zone != newZone) {
+      particle.wrap(1)
       // remove from prev zone 
       const idx = zone.particles.indexOf(particle)
       zone.particles.splice(idx, 1)
       // add to new zone
       newZone.particles.push(particle)
+      this.markForUpdate(newZone)
     }
+  }
+
+  markForUpdate(zone) {
+    this.changingZones.add(zone)
   }
 
   // 
@@ -87,7 +105,9 @@ export class Grid {
     for (let zone of deletedCols) {
       for (let particle of zone.particles) {
         const newCol = zone.x % this.cells.x
-        this.zones[newCol][zone.y].particles.push(particle)
+        const updatedZone = this.zones[newCol][zone.y]
+        updatedZone.particles.push(particle)
+        this.markForUpdate(zone)
       }
       zone.particles = []
     }
@@ -101,7 +121,9 @@ export class Grid {
       for (let zone of deletedRows) {
         for (let particle of zone.particles) {
           const newRow = zone.y % newRows
-          this.zones[zone.x][newRow].particles.push(particle)
+          const updatedZone = this.zones[zone.x][newRow]
+          updatedZone.particles.push(particle)
+          this.markForUpdate(zone)
         }
         zone.particles = []
       }
@@ -115,6 +137,7 @@ export class Grid {
       for (let y=0;y<this.cells.y;y++) {
         const zone = new Zone(x, y, this.gridSize)
         this.zones[x].push(zone)
+        this.markForUpdate(zone)
       }
     }
   }
@@ -125,6 +148,7 @@ export class Grid {
       for (let y=this.cells.y;y<rows;y++) {
         const zone = new Zone(x, y, this.gridSize)
         this.zones[x].push(zone)
+        this.markForUpdate(zone)
       }
     }
   }
@@ -166,11 +190,13 @@ export class Grid {
   getNearbyVectors(particle, zone) {
     const vectors = []
     for (let otherZone of this.getNearby(zone)) {
+      const zoneDelta = otherZone.copy().subtract(zone)
       for (let other of otherZone.particles) {
         if (other == particle) continue // ignore self
-        const distance = this.distanceFunc(particle, other)
+        const otherOffset = other.copy().subtract(zoneDelta)
+        const distance = this.distanceFunc(particle, otherOffset)
         if (distance > 1) continue // out of range
-        vectors.push({ particle, other, distance })
+        vectors.push({ particle, other, otherOffset, distance })
       }
     }
     return vectors 
@@ -183,6 +209,10 @@ export class Grid {
 
   pairs(callback) {
     this.eachNearbyVector(neighbors => neighbors.forEach(callback))
+  }
+
+  getZoneOffset(pos) {
+    return pos.copy()
   }
 
   getZone(pos) {

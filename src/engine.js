@@ -8,11 +8,11 @@ export class Engine {
     this.drawDelay = 1000 / fps
     this.tickDelay = 1000 / tps
     this.canvas = canvas
-    this.speed = 0.005
+    this.speed = 0.05
     this.wrap = true
     this.gravityCurve = 0.03
     this.antigravity = 0.05
-    this.airFriction = 0.05
+    this.airFriction = 0.005
     this.heatSpeed = 0
     this.paused = true
     this.screenFill = 2/3

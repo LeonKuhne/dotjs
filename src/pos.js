@@ -53,6 +53,13 @@ export class Pos extends Array {
     return this
   }
 
+  wrap(range) {
+    this
+      .mod(range)
+      .map((val, _) => (val <= 0) ? val + range : val)
+    return this
+  }
+
   add(other) {
     this.slide(other)
     return this
@@ -70,6 +77,11 @@ export class Pos extends Array {
   
   round() {
     this.map((val, _) => Math.round(val))
+    return this
+  }
+
+  floor() {
+    this.map((val, _) => Math.floor(val))
     return this
   }
 

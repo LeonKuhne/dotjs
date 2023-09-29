@@ -7,27 +7,26 @@ export class Zone extends Pos {
     this.color = "#aaaaaa"
   }
 
-  draw(ctx, paneOffset, paneSize, gridSize) {
-    // TODO only redraw the zone if it was updated
+  clear(ctx, offset, gridSize) {
     const pos = this.copy()
       .scale(gridSize)
-      .slide(paneOffset)
+      .slide(offset)
       .slideFactor(-0.5) // align to grid
     const size = gridSize - 0.5 // align to grid
-
-    // clear zone
+    // clear square
     ctx.clearRect(pos.x, pos.y, size, size)
     ctx.fillStyle = "#000000"
     ctx.fillRect(pos.x, pos.y, size, size)
-
-    // draw zone border
+    // draw border
     ctx.strokeStyle = this.color
     ctx.fillStyle = this.color
     ctx.strokeRect(pos.x, pos.y, size, size)
-
     // draw particle count
     ctx.font = "18px Arial"
-    ctx.fillText(this.particles.length, pos.x + gridSize/3, pos.y + gridSize*3/4)
+    ctx.fillText(this.particles.length, pos.x + size/3, pos.y + size*3/4)
+  }
+
+  draw(ctx, paneOffset, paneSize) {
     // draw particles
     for (let particle of this.particles) {
       particle.draw(ctx, paneOffset, paneSize)

@@ -13,7 +13,7 @@ export class Particle extends Pos {
     this.spin = spin
     this.size = 8
     this.heat = 0.5
-    this.friction = 0.1
+    this.friction = 0.001
     this.wallForce = 0.01
     this.updateColor()
   }
@@ -69,14 +69,13 @@ export class Particle extends Pos {
     other.forceQueue.subtract(delta)
   }
 
-  tick(airFriction, heatSpeed, wrap, maxSpeed=0.01) {
+  tick(airFriction, heatSpeed, maxSpeed=0.01) {
     this.applyFriction(airFriction)
     this.applyHeat(heatSpeed)
     // limit speed (TODO use log or something smooth that works with inifinity)
     this.velocity.map((val, _) => Math.min(Math.max(-maxSpeed, val), maxSpeed))
     this.velocity.slide(this.force)
     this.slide(this.velocity)
-    wrap ? this.wrap() : this.collideBounds()
     this.force.zero()
   }
 
@@ -132,22 +131,6 @@ export class Particle extends Pos {
       sum += Math.abs(other.spin[i] - val) / 2
     })
     return sum / particle.spin.length
-  }
-
-  wrap(range=1) {
-    this.map((val, _) => {
-      val %= range
-      if (val <= 0) return val + range 
-      return val
-    })
-  }
-
-  collideBounds(range=1) {
-    this.map((val, _) => {
-      if (val < 0) return 0
-      if (val > range) return range
-      return val
-    })
   }
 
   copy() {
