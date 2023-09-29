@@ -45,7 +45,7 @@ export class Grid {
   fixParticleZone(particle, zone) {
     const newZone = this.getZone(particle)
     // check for zone change
-    if (zone.copy().subtract(newZone).sum() > 0) {
+    if (zone != newZone) {
       // remove from prev zone 
       const idx = zone.particles.indexOf(particle)
       zone.particles.splice(idx, 1)
