@@ -1,4 +1,4 @@
-import { Position } from "./position";
+import { Position } from "./position.js"
 
 
 export class StaticParticle extends Position {
@@ -6,11 +6,10 @@ export class StaticParticle extends Position {
   static color = '#969696' 
 
   constructor(
-    spin = 0.5,
     pos = new Position([0.5, 0.5]),
   ) {
     super(pos.pos)
-    this.spin = spin
+    this.spin = 0.5
     this.size = StaticParticle.size
   }
 
