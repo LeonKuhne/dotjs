@@ -84,7 +84,7 @@ export class Engine {
             .slide(borderSize)
           // draw frame
           ctx.clearRect(pos.x, pos.y, screenSize.x, screenSize.y)
-          ctx.drawImage(canvas, 
+          ctx.drawImage(this.canvas, 
             borderSize.x, borderSize.y, screenSize.x, screenSize.y,
             pos.x, pos.y, screenSize.x, screenSize.y)
         }
