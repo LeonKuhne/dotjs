@@ -29,8 +29,7 @@ window.onload = () => {
     click
       .subtract(engine.paneOffset)
       .divide(engine.paneSize)
-      .slideFactor(1)
-      .mod(1)
+      .wrapFactor(1)
     engine.add(paintSpin(), click)
   }
   // listeners

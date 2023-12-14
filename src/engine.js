@@ -9,7 +9,6 @@ export class Engine {
     this.tickDelay = 1000 / tps
     this.canvas = canvas
     this.speed = 0.05
-    this.wrap = true
     this.gravityCurve = 0.03
     this.antigravity = 0.05
     this.airFriction = 0.005
@@ -55,7 +54,7 @@ export class Engine {
     ctx.beginPath()
 
     // draw particles
-    this.grid.draw(this.paneOffset, this.paneSize)
+    this.grid.draw(this.paneOffset)
 
     // duplicate to sides
     // 0.033ms draw only portions of frame that are needed
@@ -84,7 +83,7 @@ export class Engine {
 
   tick() {
     if (this.paused) { return }
-    this.grid.tick(this.antigravity, this.airFriction, this.heatSpeed, this.speed, this.wrap)
+    this.grid.tick(this.antigravity, this.airFriction, this.heatSpeed, this.speed)
   }
 
   // 

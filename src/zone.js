@@ -26,10 +26,13 @@ export class Zone extends Pos {
     ctx.fillText(this.particles.length, pos.x + size/3, pos.y + size*3/4)
   }
 
-  draw(ctx, paneOffset, paneSize) {
+  draw(ctx, paneOffset, zoneSize) {
+    const zoneOffset = this.copy()
+      .scale(zoneSize)
+      .slide(paneOffset)
     // draw particles
     for (let particle of this.particles) {
-      particle.draw(ctx, paneOffset, paneSize)
+      particle.draw(ctx, zoneOffset, zoneSize)
     }
   }
 

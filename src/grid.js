@@ -15,6 +15,7 @@ export class Grid {
 
   track(particle) {
     const zone = this.getZone(particle)
+    particle.wrap(this.cells.copy().invert())
     zone.insert(particle)
     this.markForUpdate(zone)
   }
@@ -24,27 +25,27 @@ export class Grid {
     this.fixZones(newCells)
   }
 
-  draw(offset, size) {
+  draw(offset) {
     this.changingZones.forEach(zone => {
       zone.clear(this.ctx, offset, this.gridSize)
-      zone.draw(this.ctx, offset, size)
+      zone.draw(this.ctx, offset, this.gridSize)
     })
     this.changingZones = new Set()
   }
 
-  tick(antigravity, airFriction, heatSpeed, speed, wrap) {
+  tick(antigravity, airFriction, heatSpeed, speed) {
     // compute forces: onedirectional
     this.pairs(({ particle, other, otherOffset, distance }) => {
       const delta = particle.copy().subtract(otherOffset)
       if (distance == 0) return
-      particle.applyGravity(other, delta, distance, antigravity, this.gridSize)
+      particle.applyGravity(other, delta, distance, antigravity)
       //particle.applyJitter()  // only apply jitter on interacting particles ???
     })
     // apply forces
     const moving = (particle) => !particle.velocity.every(x => x == 0)
     this.eachParticle((particle, zone) => {
       particle.force.scale(speed)
-      particle.tick(airFriction, heatSpeed, wrap)
+      particle.tick(airFriction, heatSpeed)
       if (moving(particle)) { 
         this.fixParticleZone(particle, zone) 
       }
@@ -53,12 +54,12 @@ export class Grid {
 
   fixParticleZone(particle, zone) {
     const zoneOffset = particle.copy().floor()
-    const newZonePos = zone.copy().slide(zoneOffset)
+    const newZonePos = zone.copy().slide(zoneOffset).wrap(this.cells)
     const newZone = this.zones[newZonePos.x][newZonePos.y]
     this.markForUpdate(zone)
     // check for zone change
     if (zone != newZone) {
-      particle.wrap(1)
+      particle.wrapFactor(1)
       // remove from prev zone 
       const idx = zone.particles.indexOf(particle)
       zone.particles.splice(idx, 1)
@@ -216,7 +217,8 @@ export class Grid {
   }
 
   getZone(pos) {
-    const [col, row] = pos.copy().map((val, i) => Math.floor((val % 1) * this.cells[i]))
+    const [col, row] = pos.copy()
+      .map((val, i) => Math.floor(val * this.cells[i]))
     return this.zones[col][row]
   }
 }

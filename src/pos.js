@@ -48,15 +48,28 @@ export class Pos extends Array {
     return this
   }
 
-  mod(range) {
+  mod(bounds) {
+    this.map((val, i) => val % bounds[i])
+    return this
+  }
+
+
+  modFactor(range) {
     this.map((val, _) => val % range)
     return this
   }
 
-  wrap(range) {
+  wrap(bounds) {
     this
-      .mod(range)
-      .map((val, _) => (val <= 0) ? val + range : val)
+      .mod(bounds)
+      .map((val, i) => (val < 0) ? val + bounds[i] : val)
+    return this
+  }
+
+  wrapFactor(range) {
+    this
+      .modFactor(range)
+      .map((val, _) => (val < 0) ? val + range : val)
     return this
   }
 

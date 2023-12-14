@@ -12,6 +12,7 @@ export class Particle extends Pos {
     // features
     this.spin = spin
     this.size = 8
+    this.halfSize = this.size / 2
     this.heat = 0.5
     this.friction = 0.001
     this.wallForce = 0.01
@@ -27,10 +28,11 @@ export class Particle extends Pos {
       .reduce((acc, val) => acc + val.toString(16).padStart(2, '0'), '#')
   }
 
-  draw(ctx, borderSize, screenSize, color=null) {
+  draw(ctx, zoneOffset, zoneSize, color=null) {
     ctx.fillStyle = color || this.color
-    const offset = this.copy().multiply(screenSize)
-    const pos = offset.copy().slide(borderSize)
+    const pos = this.copy()
+      .scale(zoneSize)
+      .slide(zoneOffset)
     this._drawParticle(ctx, pos.x, pos.y)
     // duplicate on top if near bottom
     /*
@@ -97,13 +99,13 @@ export class Particle extends Pos {
     this.force.slide(new Pos([jitter, jitter]))
   }
 
-  applyGravity(other, normal, distance, strength=0.05, curve=1) {
+  applyGravity(other, delta, distance, strength=0.05, curve=1) {
     let spin = this.spinDelta(other) * 2 - 1
     let gravity = Math.pow((spin * strength / distance), curve)
     //const gravity = strength * (1 - Math.pow(distance, 2))
     //const gravity = strength / Math.tan(distance - Math.PI / 2 - .5)
     //const gravity = strength * (1 - Math.pow(distance, radius))
-    this.force.slide(normal.scale(gravity * spin))
+    this.force.slide(delta.scale(gravity * spin))
   }
 
   /*
@@ -138,6 +140,6 @@ export class Particle extends Pos {
   }
 
   _drawParticle(ctx, x, y) {
-    ctx.fillRect(x, y, this.size, this.size)
+    ctx.fillRect(x-this.halfSize, y-this.halfSize, this.size, this.size)
   }
 }
