@@ -1,21 +1,21 @@
-import { Position } from './position.js'
+import { Position } from "./position";
 
-export class Particle extends Position {
+
+export class StaticParticle extends Position {
   static size = 8
+  static color = '#969696' 
 
-  // spin can be either a number or a list of numbers
-  // pos only 2 dimensions currently supported
   constructor(
     spin = 0.5,
     pos = new Position([0.5, 0.5]),
   ) {
     super(pos.pos)
     this.spin = spin
-    this.size = Particle.size
+    this.size = StaticParticle.size
   }
 
-  draw(ctx, borderSize, screenSize, color=(_) => [150,150,150]) {
-    ctx.fillStyle = `rgb(${color(this).join(',')})`
+  draw(ctx, borderSize, screenSize) {
+    ctx.fillStyle = self.color
     const offset = this.copy().multiply(screenSize)
     const pos = offset.copy().slide(borderSize)
     // draw particle
@@ -34,23 +34,13 @@ export class Particle extends Position {
     ctx.fillRect(x, y, this.size, this.size)
   }
 
-  spinDelta(other) { 
-    return Particle.SpinDelta(this, other)
-  }
-
-  // between 0 and 1, 0.5 means no attraction/repulsion
-  static SpinDelta(a, b) {
-    let sum = 0
-    for (let i = 0; i < a.spin.length; i++) {
-      sum += Math.abs(b.spin[i] - a.spin[i]) / 2
-    }
-    return sum / a.spin.length
+  spinDelta(_) { 
+    return .5
   }
 
   wrap(range=1) {
     for (let i = 0; i < this.pos.length; i++) {
-      if (this.pos[i] <= 0) { 
-        this.pos[i] += range }
+      if (this.pos[i] <= 0) { this.pos[i] += range }
       else { this.pos[i] %= range }
     }
   }
@@ -60,9 +50,5 @@ export class Particle extends Position {
       if (this.pos[i] < 0) { this.pos[i] = 0 }
       else if (this.pos[i] > range) { this.pos[i] = range }
     }
-  }
-
-  copy() {
-    return new Particle([...this.spin], new Position([...this.pos]))
   }
 }
