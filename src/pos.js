@@ -55,8 +55,9 @@ export class Pos extends Array {
   
   mod1() {
     this.map((val, _) => {
-      const h = (val < 0 ? Math.ceil : Math.floor)
-      return val - h(val)
+      val = val % 1
+      if (val >= 0) return val
+      return val + 1
     })
     return this
   }

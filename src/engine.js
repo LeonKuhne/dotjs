@@ -1,6 +1,7 @@
 import { Particle } from './particle.js'
 import { Pos } from './pos.js'
 import { Grid } from './grid.js'
+import { Timer } from './timer.js'
 
 // particle engine
 export class Engine {
@@ -58,24 +59,27 @@ export class Engine {
 
     // duplicate to sides
     // 0.033ms draw only portions of frame that are needed
-    /* 
     setTimeout(() => {
+      const timer = Timer.instance('engine.draw duplicates').start()
       for (let y = -1; y <= 1; y++) {
         for (let x = -1; x <= 1; x++) {
           if (x == 0 && y == 0) { continue }
           // calculate position
           const pos = new Pos([x, y])
-            .multiply(paneSize)
-            .slide(paneOffset)
+            .multiply(this.paneSize)
+            .slide(this.paneOffset)
           // draw frame
-          ctx.clearRect(pos.x, pos.y, paneSize.x, paneSize.y)
+          ctx.clearRect(pos.x, pos.y, this.paneSize.x, this.paneSize.y)
           ctx.drawImage(this.canvas, 
-            paneOffset.x, paneOffset.y, paneSize.x, paneSize.y,
-            pos.x, pos.y, paneSize.x, paneSize.y)
+            this.paneOffset.x, this.paneOffset.y, this.paneSize.x, this.paneSize.y,
+            pos.x, pos.y, this.paneSize.x, this.paneSize.y)
         }
       }
+      timer.end()
+
+      // debug
+      Timer.render(ctx, this.paneOffset.x + this.paneSize.x - 100, 20)
     }, 0)
-    */
 
     // stamp
     ctx.stroke()
@@ -83,7 +87,9 @@ export class Engine {
 
   tick() {
     if (this.paused) { return }
+    const timer = Timer.instance('engine.tick').start()
     this.grid.tick(this.antigravity, this.airFriction, this.heatSpeed, this.speed)
+    timer.end()
   }
 
   // 

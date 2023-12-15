@@ -1,4 +1,5 @@
 import { Pos } from './pos.js'
+import { Timer } from './timer.js'
 
 export class Particle extends Pos {
   static count = 0
@@ -100,12 +101,14 @@ export class Particle extends Pos {
   }
 
   applyGravity(other, delta, distance, strength=0.05, curve=1) {
+    const timer = Timer.instance('particle.applyGravity').start()
     let spin = this.spinDelta(other) * 2 - 1
     let gravity = Math.pow((spin * strength / distance), curve)
     //const gravity = strength * (1 - Math.pow(distance, 2))
     //const gravity = strength / Math.tan(distance - Math.PI / 2 - .5)
     //const gravity = strength * (1 - Math.pow(distance, radius))
     this.force.slide(delta.scale(gravity * spin))
+    timer.end()
   }
 
   /*

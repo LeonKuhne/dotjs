@@ -1,5 +1,6 @@
 import { Zone } from './zone.js'
 import { Pos } from './pos.js'
+import { Timer } from './timer.js'
 
 export class Grid {
 
@@ -28,14 +29,30 @@ export class Grid {
   }
 
   draw(offset) {
+    const timer = Timer.instance('grid.draw').start()
+    // collect neighboring zones
+    const neighboringZones = new Set()
     this.changingZones.forEach(zone => {
       zone.clear(this.ctx, offset, this.gridSize)
+      this.getNearby(zone).forEach(neighbor => {
+        if (this.changingZones.has(neighbor)) return
+        neighboringZones.add(neighbor)
+      })
+    })
+    // in order from left to right, top to bottom
+    const orderedZones = Array.from(this.changingZones) 
+      .sort((a, b) => a.x - b.x || a.y - b.y)  
+    // udpate zones that changed
+    orderedZones.forEach(zone => {
       zone.draw(this.ctx, offset, this.gridSize)
     })
+    // clear neighboring zones
     this.changingZones = new Set()
+    timer.end()
   }
 
   tick(antigravity, airFriction, heatSpeed, speed) {
+    let timer = Timer.instance('grid.tick compute').start()
     // compute forces: onedirectional
     this.pairs(({ particle, other, otherOffset, distance }) => {
       const delta = particle.copy().subtract(otherOffset)
@@ -43,6 +60,8 @@ export class Grid {
       particle.applyGravity(other, delta, distance, antigravity)
       //particle.applyJitter()  // only apply jitter on interacting particles ???
     })
+    timer.end()
+    timer = Timer.instance('grid.tick apply').start()
     // apply forces
     const moving = (particle) => !particle.velocity.every(x => x == 0)
     this.eachParticle((particle, zone) => {
@@ -52,6 +71,7 @@ export class Grid {
         this.fixParticleZone(particle, zone) 
       }
     })
+    timer.end()
   }
 
   fixParticleZone(particle, zone) {
@@ -191,6 +211,7 @@ export class Grid {
   }
 
   getNearbyVectors(particle, zone) {
+    const timer = Timer.instance('grid.getNearbyVectors').start()
     const vectors = []
     for (let otherZone of this.getNearby(zone)) {
       const zoneDelta = otherZone.copy().subtract(zone)
@@ -202,6 +223,7 @@ export class Grid {
         vectors.push({ particle, other, otherOffset, distance })
       }
     }
+    timer.end()
     return vectors 
   }
 
@@ -211,7 +233,9 @@ export class Grid {
   }
 
   pairs(callback) {
+    const timer = Timer.instance('grid.pairs').start()
     this.eachNearbyVector(neighbors => neighbors.forEach(callback))
+    timer.end()
   }
 
   getZoneOffset(pos) {

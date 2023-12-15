@@ -7,6 +7,7 @@ export class Timer {
     this.history = []
     this.sum = 0
     this.historySize = historySize
+    this.count = 0
   }
 
   static instance(id, historySize=1000) {
@@ -22,6 +23,7 @@ export class Timer {
   }
   
   end() {
+    this.count += 1
     const duration = (this._now() - this.startTime)
     if (this.history.length > this.historySize) { 
       this.sum -= this.history.shift()
@@ -36,10 +38,27 @@ export class Timer {
     return new Date().getTime()
   }
 
-  render(ctx, x, y) {
-    ctx.font = '20px Arial'
-    ctx.fillStyle = 'white'
-    ctx.fillText(`${this.avg}ms`, x, y)
+  static render(ctx, x, y) {
+    ctx.font = '12px Arial'
+    const clearLn = (str) => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'
+      ctx.fillRect(x, y - 12, 200, 12)
+    }
+    const printLn = (str, offset=0) => {
+      ctx.fillStyle = 'white'
+      ctx.fillText(str, x + offset, y)
+    }
+
+    clearLn()
+    printLn('Impact')
+    printLn('Method', 80)
+
+    for (const [id, timer] of Object.entries(Timer.instances)) {
+      y += 12
+      clearLn()
+      printLn(parseInt(timer.avg * timer.count))
+      printLn(id, 80)
+    }
     return this
   }
 }
