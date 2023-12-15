@@ -15,7 +15,9 @@ export class Grid {
 
   track(particle) {
     const zone = this.getZone(particle)
-    particle.wrap(this.cells.copy().invert())
+    particle
+      .multiply(this.cells.copy())
+      .mod1()
     zone.insert(particle)
     this.markForUpdate(zone)
   }
@@ -59,7 +61,7 @@ export class Grid {
     this.markForUpdate(zone)
     // check for zone change
     if (zone != newZone) {
-      particle.wrapFactor(1)
+      particle.mod1()
       // remove from prev zone 
       const idx = zone.particles.indexOf(particle)
       zone.particles.splice(idx, 1)

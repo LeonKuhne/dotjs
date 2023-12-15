@@ -20,16 +20,15 @@ window.onload = () => {
   let minDelta = 5
   const addParticles = (clickX, clickY) => {
     const click = new Pos([clickX, clickY])
-    if (!mouseDown 
-      || Math.abs(click.x - lastClick.x) < minDelta 
-      || Math.abs(click.y - lastClick.y) < minDelta
-    ) return
+    const clickDistance = click.copy().subtract(lastClick).magnitude()
+    if (!mouseDown || clickDistance < minDelta) return
     lastClick = click.copy()
     // account for the screen offset
     click
       .subtract(engine.paneOffset)
       .divide(engine.paneSize)
-      .wrapFactor(1)
+      .mod1()
+    console.log(click)
     engine.add(paintSpin(), click)
   }
   // listeners

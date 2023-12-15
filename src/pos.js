@@ -52,7 +52,14 @@ export class Pos extends Array {
     this.map((val, i) => val % bounds[i])
     return this
   }
-
+  
+  mod1() {
+    this.map((val, _) => {
+      const h = (val < 0 ? Math.ceil : Math.floor)
+      return val - h(val)
+    })
+    return this
+  }
 
   modFactor(range) {
     this.map((val, _) => val % range)
@@ -61,15 +68,8 @@ export class Pos extends Array {
 
   wrap(bounds) {
     this
+      .add(bounds)
       .mod(bounds)
-      .map((val, i) => (val < 0) ? val + bounds[i] : val)
-    return this
-  }
-
-  wrapFactor(range) {
-    this
-      .modFactor(range)
-      .map((val, _) => (val < 0) ? val + range : val)
     return this
   }
 
