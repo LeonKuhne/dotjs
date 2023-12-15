@@ -12,6 +12,7 @@ export class Grid {
     this.zones = []
     this.distanceFunc = distanceFunc
     this.changingZones = new Set()
+    this.lazyNearbyZone = {}
   }
 
   track(particle) {
@@ -188,6 +189,9 @@ export class Grid {
   }
 
   getNearby(zone) {
+    if (zone.x in this.lazyNearbyZone && zone.y in this.lazyNearbyZone[zone.x]) {
+      return this.lazyNearbyZone[zone.x][zone.y]
+    }
     const nearby = []
     const wrapCell = (cell, max) => {
       if (cell < 0) return cell + max
@@ -201,6 +205,8 @@ export class Grid {
         nearby.push(this.zones[col][row])
       }
     }
+    if (!(zone.x in this.lazyNearbyZone)) this.lazyNearbyZone[zone.x] = {}
+    this.lazyNearbyZone[zone.x][zone.y] = nearby
     return nearby
   }
 
@@ -210,17 +216,27 @@ export class Grid {
         callback(particle, zone)))
   }
 
+  filterPair(particle, other, zone, otherZone) {
+    // TODO lazy load this
+    const timer = Timer.instance('grid.filterPair').start()
+    if (other == particle) return // ignore self
+    const zoneDelta = otherZone.copy().subtract(zone)
+    const otherOffset = other.copy().subtract(zoneDelta)
+    const distance = this.distanceFunc(particle, otherOffset)
+    if (distance > 1) return // out of range
+    timer.end()
+    return { particle, other, otherOffset, distance }
+  }
+
   getNearbyVectors(particle, zone) {
+    // figure out how to lazy load this or speed it up some other way
     const timer = Timer.instance('grid.getNearbyVectors').start()
     const vectors = []
     for (let otherZone of this.getNearby(zone)) {
-      const zoneDelta = otherZone.copy().subtract(zone)
       for (let other of otherZone.particles) {
-        if (other == particle) continue // ignore self
-        const otherOffset = other.copy().subtract(zoneDelta)
-        const distance = this.distanceFunc(particle, otherOffset)
-        if (distance > 1) continue // out of range
-        vectors.push({ particle, other, otherOffset, distance })
+        const pair = this.filterPair(particle, other, zone, otherZone)
+        if (!pair) continue
+        vectors.push(pair)
       }
     }
     timer.end()

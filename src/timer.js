@@ -3,6 +3,7 @@ export class Timer {
   static instances = {}
 
   constructor(historySize=1000) {
+    this.createTime = Timer._now()
     this.startTime = null
     this.history = []
     this.sum = 0
@@ -18,13 +19,13 @@ export class Timer {
   }
 
   start() {
-    this.startTime = this._now()
+    this.startTime = Timer._now()
     return this
   }
   
   end() {
     this.count += 1
-    const duration = (this._now() - this.startTime)
+    const duration = (Timer._now() - this.startTime)
     if (this.history.length > this.historySize) { 
       this.sum -= this.history.shift()
     }
@@ -34,7 +35,7 @@ export class Timer {
     return this
   }
 
-  _now() {
+  static _now() {
     return new Date().getTime()
   }
 
@@ -50,13 +51,17 @@ export class Timer {
     }
 
     clearLn()
-    printLn('Impact')
+    printLn('impact/s')
     printLn('Method', 80)
 
     for (const [id, timer] of Object.entries(Timer.instances)) {
       y += 12
       clearLn()
-      printLn(parseInt(timer.avg * timer.count))
+      const createDuration = (Timer._now() - timer.createTime) / 1000 // in seconds
+      //const impact = timer.avg * timer.count
+      const impactPerSecond = timer.sum / createDuration
+      printLn(parseInt(impactPerSecond * 100) / 100)
+      //printLn(parseInt(timer.avg * timer.count))
       printLn(id, 80)
     }
     return this

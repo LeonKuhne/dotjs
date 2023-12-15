@@ -5,11 +5,11 @@ import { Timer } from './timer.js'
 
 // particle engine
 export class Engine {
-  constructor(canvas, fps = 60, tps = 60) {
+  constructor(canvas, fps = 30, tps = 60) {
     this.drawDelay = 1000 / fps
     this.tickDelay = 1000 / tps
     this.canvas = canvas
-    this.speed = 0.05
+    this.speed = 0.5
     this.gravityCurve = 0.03
     this.antigravity = 0.05
     this.airFriction = 0.005
